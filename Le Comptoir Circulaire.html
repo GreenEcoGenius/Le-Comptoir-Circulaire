@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Le Comptoir Circulaire - GreenEcoGenius</title>
+    
+    <!-- Tailwind CSS & Google Fonts -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" xintegrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        /* Définition de la palette de couleurs et de la police */
+        :root {
+            --color-dark-bg: #0a2c38; 
+            --color-secondary-bg: #1a3a45;
+            --color-card-bg: #112f3b;
+            --color-text: #d0e0e3;    
+            --color-text-white: #ffffff;
+            --color-primary: #5affb5; 
+            --color-primary-darker: #49db9f;
+            --font-main: 'Poppins', sans-serif;
+        }
+
+        /* Conteneur principal */
+        #le-comptoir-app {
+            font-family: var(--font-main);
+            background-color: var(--color-dark-bg);
+            color: var(--color-text);
+            min-height: 100vh;
+        }
+        
+        /* Règle pour le texte général (évite les conflits) */
+        #le-comptoir-app p, #le-comptoir-app div, #le-comptoir-app span, #le-comptoir-app li {
+            color: var(--color-text) !important;
+        }
+        #le-comptoir-app h1, #le-comptoir-app h2, #le-comptoir-app h3, #le-comptoir-app h4, #le-comptoir-app label {
+            color: var(--color-text-white) !important;
+        }
+        
+
+        /* Style pour la barre de défilement */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--color-secondary-bg); }
+        ::-webkit-scrollbar-thumb { background: var(--color-primary); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--color-primary-darker); }
+
+        .tag { background-color: var(--color-secondary-bg); color: var(--color-primary) !important; }
+        .fade-in { animation: fadeIn 0.5s ease-in-out; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Styles pour le modal */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(10, 44, 56, 0.8);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 1000; backdrop-filter: blur(5px);
+        }
+        .modal-content {
+            background: var(--color-secondary-bg);
+            padding: 2rem; border-radius: 1rem;
+            width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto;
+        }
+        
+        /* Styles spécifiques et puissants pour les champs de formulaire DANS le modal */
+        #add-lot-modal label {
+            color: var(--color-text) !important;
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+        #add-lot-modal input, #add-lot-modal select {
+            color: var(--color-text-white) !important;
+            background-color: var(--color-dark-bg) !important;
+            border: 1px solid var(--color-secondary-bg) !important;
+            border-radius: 0.5rem !important;
+            padding: 0.75rem !important;
+            width: 100% !important;
+            -webkit-appearance: none; /* Pour enlever le style par défaut sur iOS */
+            -moz-appearance: none;
+            appearance: none;
+        }
+        #add-lot-modal input::placeholder {
+            color: #576574 !important;
+        }
+        #add-lot-modal input:focus, #add-lot-modal select:focus {
+            outline: none !important;
+            box-shadow: 0 0 0 2px var(--color-primary) !important;
+            border-color: var(--color-primary) !important;
+        }
+        #add-lot-modal .form-button {
+            padding-top: 0.75rem; padding-bottom: 0.75rem;
+            padding-left: 1.5rem; padding-right: 1.5rem;
+            border-radius: 9999px;
+            font-weight: bold;
+            transition: background-color 0.3s, transform 0.3s;
+            cursor: pointer;
+            border: none; /* S'assurer qu'il n'y a pas de bordure par défaut */
+        }
+        #add-lot-modal .form-button:hover {
+            transform: scale(1.05);
+        }
+        #add-lot-modal .primary-button {
+            background-color: var(--color-primary) !important;
+            color: var(--color-dark-bg) !important;
+        }
+        #add-lot-modal .cancel-button {
+            background-color: var(--color-card-bg) !important;
+            color: var(--color-text-white) !important;
+        }
+    </style>
+</head>
+<body id="le-comptoir-app">
+
+    <!-- En-tête de l'application -->
+    <header class="bg-secondary-bg shadow-lg">
+        <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <div>
+                <h1 class="text-2xl font-bold text-white">Le Comptoir Circulaire</h1>
+                <p class="text-sm">Par GreenEcoGenius</p>
+            </div>
+            <button id="add-lot-btn" class="bg-primary text-dark-bg font-bold py-2 px-6 rounded-full hover:bg-primary-darker transition duration-300">
+                <i class="fas fa-plus-circle mr-2"></i>Vendre un lot
+            </button>
+        </div>
+    </header>
+
+    <!-- Corps principal de l'application -->
+    <main class="container mx-auto px-6 py-8">
+        <!-- Barre de filtres et de recherche -->
+        <div class="bg-secondary-bg p-6 rounded-lg shadow-xl mb-8">
+            <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                <div class="md:col-span-2 lg:col-span-2">
+                    <label for="search-input" class="block mb-2 text-sm font-medium">Rechercher un matériau</label>
+                    <div class="relative"><span class="absolute inset-y-0 left-0 flex items-center pl-3"><i class="fas fa-search text-gray-400"></i></span><input type="text" id="search-input" class="w-full bg-dark-bg border border-secondary-bg rounded-lg py-2 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Ex: Plastique HDPE, Cuivre..."></div>
+                </div>
+                <div>
+                    <label for="category-filter" class="block mb-2 text-sm font-medium">Catégorie</label>
+                    <select id="category-filter" class="w-full bg-dark-bg border border-secondary-bg rounded-lg py-2 px-3 focus:outline-none focus:ring-2 focus:ring-primary">
+                        <option value="all">Toutes les catégories</option><option value="Plastiques">Plastiques</option><option value="Métaux">Métaux</option><option value="Papiers/Cartons">Papiers/Cartons</option><option value="Verre">Verre</option><option value="Bois">Bois</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="country-filter" class="block mb-2 text-sm font-medium">Pays</label>
+                    <select id="country-filter" class="w-full bg-dark-bg border border-secondary-bg rounded-lg py-2 px-3 focus:outline-none focus:ring-2 focus:ring-primary">
+                        <option value="all">Toute l'Europe</option><option value="France">France</option><option value="Allemagne">Allemagne</option><option value="Italie">Italie</option><option value="Espagne">Espagne</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section de contenu principal -->
+        <div class="flex flex-col lg:flex-row gap-8">
+            <!-- Colonne principale : Grille des matériaux -->
+            <div class="w-full lg:w-2/3">
+                <h2 class="text-xl font-semibold mb-4 text-white">Stock disponible en temps réel</h2>
+                <div id="materials-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6 min-h-[300px]">
+                    <p id="loading-indicator" class="col-span-full text-center">Connexion à la base de données...</p>
+                </div>
+            </div>
+            <!-- Colonne latérale : Statistiques -->
+            <aside class="w-full lg:w-1/3">
+                <div class="bg-secondary-bg p-6 rounded-lg shadow-xl sticky top-8">
+                    <h3 class="text-xl font-semibold mb-4 text-white">Aperçu du Marché</h3>
+                    <div><canvas id="volumeChart"></canvas></div>
+                </div>
+            </aside>
+        </div>
+    </main>
+
+    <!-- Modal pour ajouter un nouveau lot -->
+    <div id="add-lot-modal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <h2 class="text-2xl font-bold mb-6 text-white">Vendre un nouveau lot</h2>
+            <form id="add-lot-form" class="space-y-4">
+                <div><label for="name" class="text-sm">Nom du matériau</label><input type="text" id="name" required></div>
+                <div><label for="category" class="text-sm">Catégorie</label><select id="category" required><option>Plastiques</option><option>Métaux</option><option>Papiers/Cartons</option><option>Verre</option><option>Bois</option></select></div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div><label for="quantity" class="text-sm">Quantité</label><input type="number" id="quantity" required></div>
+                    <div><label for="unit" class="text-sm">Unité</label><select id="unit" required><option>tonnes</option><option>m³</option><option>kg</option></select></div>
+                </div>
+                 <div class="grid grid-cols-2 gap-4">
+                    <div><label for="price" class="text-sm">Prix (par unité)</label><input type="number" id="price" required></div>
+                    <div><label for="location" class="text-sm">Localisation (Ville, Pays)</label><input type="text" id="location" placeholder="Ex: Lyon, France" required></div>
+                 </div>
+                <div><label for="supplier" class="text-sm">Fournisseur</label><input type="text" id="supplier" required></div>
+                <div class="flex justify-end space-x-4 pt-4">
+                    <button type="button" id="cancel-btn" class="form-button cancel-button">Annuler</button>
+                    <button type="submit" class="form-button primary-button">Ajouter le lot</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Scripts Firebase -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getFirestore, collection, onSnapshot, addDoc, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+
+        document.addEventListener('DOMContentLoaded', function() {
+            let allMaterials = [];
+            let volumeChart;
+
+            const grid = document.getElementById('materials-grid');
+            const searchInput = document.getElementById('search-input');
+            const categoryFilter = document.getElementById('category-filter');
+            const countryFilter = document.getElementById('country-filter');
+            const loadingIndicator = document.getElementById('loading-indicator');
+            const addLotModal = document.getElementById('add-lot-modal');
+            const addLotBtn = document.getElementById('add-lot-btn');
+            const cancelBtn = document.getElementById('cancel-btn');
+            const addLotForm = document.getElementById('add-lot-form');
+            const chartCanvas = document.getElementById('volumeChart');
+
+            function displayMaterials(filteredMaterials) {
+                grid.innerHTML = '';
+                if (filteredMaterials.length === 0 && loadingIndicator.style.display === 'none') {
+                    grid.innerHTML = '<p class="text-center col-span-full">Aucun matériau trouvé. Soyez le premier à ajouter un lot !</p>';
+                    return;
+                }
+                filteredMaterials.forEach(material => {
+                    const card = document.createElement('div');
+                    card.className = 'bg-card-bg rounded-lg shadow-lg overflow-hidden transform hover:-translate-y-2 transition duration-300 fade-in';
+                    card.innerHTML = `
+                        <img src="https://placehold.co/600x400/112f3b/5affb5?text=${encodeURIComponent(material.category)}" alt="${material.name}" class="w-full h-40 object-cover">
+                        <div class="p-5">
+                            <span class="tag text-xs font-semibold py-1 px-3 rounded-full">${material.category}</span>
+                            <h3 class="text-lg font-bold mt-3 text-white">${material.name}</h3>
+                            <p class="text-sm mt-2"><i class="fas fa-map-marker-alt mr-2"></i>${material.location}</p>
+                            <div class="mt-4 flex justify-between items-center">
+                                <div><p class="text-sm font-semibold text-white">${material.quantity} ${material.unit}</p><p class="text-xs">disponibles</p></div>
+                                <div class="text-right"><p class="text-lg font-bold text-primary">${new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(material.price)}</p><p class="text-xs">par ${material.unit === 'm³' ? 'm³' : 'tonne'}</p></div>
+                            </div>
+                            <button class="w-full mt-4 bg-primary text-dark-bg font-bold py-2 rounded-lg hover:bg-primary-darker transition duration-300">Voir le lot</button>
+                        </div>`;
+                    grid.appendChild(card);
+                });
+            }
+
+            function filterAndSearch() {
+                const searchTerm = searchInput.value.toLowerCase();
+                const selectedCategory = categoryFilter.value;
+                const selectedCountry = countryFilter.value;
+                const filtered = allMaterials.filter(material => {
+                    const country = material.location ? material.location.split(',').pop().trim() : '';
+                    const nameMatch = material.name ? material.name.toLowerCase().includes(searchTerm) : false;
+                    const supplierMatch = material.supplier ? material.supplier.toLowerCase().includes(searchTerm) : false;
+                    const matchesSearch = nameMatch || supplierMatch;
+                    const matchesCategory = selectedCategory === 'all' || material.category === selectedCategory;
+                    const matchesCountry = selectedCountry === 'all' || country === selectedCountry;
+                    return matchesSearch && matchesCategory && matchesCountry;
+                });
+                displayMaterials(filtered);
+            }
+
+            function initializeChart() {
+                if (chartCanvas) {
+                    const ctx = chartCanvas.getContext('2d');
+                    volumeChart = new Chart(ctx, {
+                        type: 'bar',
+                        data: { labels: [], datasets: [{ label: 'Volume de stock (en tonnes)', data: [], backgroundColor: 'rgba(90, 255, 181, 0.6)', borderColor: 'rgba(90, 255, 181, 1)', borderWidth: 1, borderRadius: 5 }] },
+                        options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { color: '#d0e0e3' }, grid: { color: 'rgba(208, 224, 227, 0.1)'}}, x: { ticks: { color: '#d0e0e3' }, grid: { display: false }}}, plugins: { legend: { display: false }}}
+                    });
+                }
+            }
+
+            function updateChart(materials) {
+                const volumeByCategory = materials.reduce((acc, material) => {
+                    if (material.unit === 'tonnes') {
+                        acc[material.category] = (acc[material.category] || 0) + parseFloat(material.quantity || 0);
+                    }
+                    return acc;
+                }, {});
+                if (volumeChart) {
+                    volumeChart.data.labels = Object.keys(volumeByCategory);
+                    volumeChart.data.datasets[0].data = Object.values(volumeByCategory);
+                    volumeChart.update();
+                }
+            }
+
+            async function initializeAppLogic() {
+                // --- VOS CLÉS FIREBASE SONT INTÉGRÉES ICI ---
+                const firebaseConfig = {
+                    apiKey: "AIzaSyB0tQRqJaOgqIi7Sbk0v1JPJZbSabzMmBo",
+                    authDomain: "greenecogenius.firebaseapp.com",
+                    projectId: "greenecogenius",
+                    storageBucket: "greenecogenius.firebasestorage.app",
+                    messagingSenderId: "201115761499",
+                    appId: "1:201115761499:web:87f9961ff40f8a5e04387e",
+                    measurementId: "G-LNSR09QLWD"
+                };
+                
+                const appId = "greenecogenius"; // Utilisation de votre projectId comme app ID
+
+                const app = initializeApp(firebaseConfig);
+                const db = getFirestore(app);
+                const auth = getAuth(app);
+                setLogLevel('debug');
+                
+                initializeChart();
+
+                try {
+                    await signInAnonymously(auth);
+                    
+                    const userId = auth.currentUser ? auth.currentUser.uid : null;
+                    if (!userId) { throw new Error("Authentification échouée, aucun utilisateur trouvé."); }
+
+                    const materialsCollectionPath = `/artifacts/${appId}/public/data/materials`;
+                    const materialsCol = collection(db, materialsCollectionPath);
+                    
+                    onSnapshot(materialsCol, (snapshot) => {
+                        allMaterials = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                        if(loadingIndicator) loadingIndicator.style.display = 'none';
+                        filterAndSearch();
+                        updateChart(allMaterials);
+                    }, (error) => {
+                        console.error("Erreur de lecture de la base de données: ", error);
+                        if(loadingIndicator) loadingIndicator.innerHTML = '<p class="text-center col-span-full text-red-400">Erreur de connexion à la base de données. Vérifiez les permissions.</p>';
+                    });
+
+                    addLotForm.addEventListener('submit', async (e) => {
+                        e.preventDefault();
+                        const newLot = {
+                            name: addLotForm.name.value, category: addLotForm.category.value,
+                            quantity: parseFloat(addLotForm.quantity.value), unit: addLotForm.unit.value,
+                            price: parseFloat(addLotForm.price.value), location: addLotForm.location.value,
+                            supplier: addLotForm.supplier.value
+                        };
+                        try {
+                            await addDoc(materialsCol, newLot);
+                            addLotForm.reset();
+                            addLotModal.classList.add('hidden');
+                        } catch (error) { console.error("Erreur d'ajout du document: ", error); }
+                    });
+
+                } catch (error) {
+                    console.error("Erreur critique d'initialisation ou d'authentification:", error);
+                    if(loadingIndicator) loadingIndicator.innerHTML = '<p class="text-center col-span-full text-red-400">Erreur de connexion au service. L\'application ne peut pas démarrer.</p>';
+                }
+
+                searchInput.addEventListener('input', filterAndSearch);
+                categoryFilter.addEventListener('change', filterAndSearch);
+                countryFilter.addEventListener('change', filterAndSearch);
+                addLotBtn.addEventListener('click', () => addLotModal.classList.remove('hidden'));
+                cancelBtn.addEventListener('click', () => addLotModal.classList.add('hidden'));
+                addLotModal.addEventListener('click', (e) => {
+                    if (e.target === addLotModal) {
+                        addLotModal.classList.add('hidden');
+                    }
+                });
+            }
+
+            initializeAppLogic();
+        });
+    </script>
+</body>
+</html>
