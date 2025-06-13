@@ -18,7 +18,6 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
-        /* Définition de la palette de couleurs et de la police */
         :root {
             --color-dark-bg: #0a2c38; 
             --color-secondary-bg: #1a3a45;
@@ -29,25 +28,18 @@
             --color-primary-darker: #49db9f;
             --font-main: 'Poppins', sans-serif;
         }
-
-        /* Conteneur principal */
         #le-comptoir-app {
             font-family: var(--font-main);
             background-color: var(--color-dark-bg);
             color: var(--color-text);
             min-height: 100vh;
         }
-        
-        /* Règle pour le texte général (évite les conflits) */
         #le-comptoir-app p, #le-comptoir-app div, #le-comptoir-app span, #le-comptoir-app li {
             color: var(--color-text) !important;
         }
         #le-comptoir-app h1, #le-comptoir-app h2, #le-comptoir-app h3, #le-comptoir-app h4, #le-comptoir-app label {
             color: var(--color-text-white) !important;
         }
-        
-
-        /* Style pour la barre de défilement */
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: var(--color-secondary-bg); }
         ::-webkit-scrollbar-thumb { background: var(--color-primary); border-radius: 4px; }
@@ -58,65 +50,6 @@
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* Styles pour le modal */
-        .modal-overlay {
-            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(10, 44, 56, 0.8);
-            display: flex; align-items: center; justify-content: center;
-            z-index: 1000; backdrop-filter: blur(5px);
-        }
-        .modal-content {
-            background: var(--color-secondary-bg);
-            padding: 2rem; border-radius: 1rem;
-            width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto;
-        }
-        
-        /* Styles spécifiques et puissants pour les champs de formulaire DANS le modal */
-        #add-lot-modal label {
-            color: var(--color-text) !important;
-            display: block;
-            margin-bottom: 0.5rem;
-        }
-        #add-lot-modal input, #add-lot-modal select {
-            color: var(--color-text-white) !important;
-            background-color: var(--color-dark-bg) !important;
-            border: 1px solid var(--color-secondary-bg) !important;
-            border-radius: 0.5rem !important;
-            padding: 0.75rem !important;
-            width: 100% !important;
-            -webkit-appearance: none; /* Pour enlever le style par défaut sur iOS */
-            -moz-appearance: none;
-            appearance: none;
-        }
-        #add-lot-modal input::placeholder {
-            color: #576574 !important;
-        }
-        #add-lot-modal input:focus, #add-lot-modal select:focus {
-            outline: none !important;
-            box-shadow: 0 0 0 2px var(--color-primary) !important;
-            border-color: var(--color-primary) !important;
-        }
-        #add-lot-modal .form-button {
-            padding-top: 0.75rem; padding-bottom: 0.75rem;
-            padding-left: 1.5rem; padding-right: 1.5rem;
-            border-radius: 9999px;
-            font-weight: bold;
-            transition: background-color 0.3s, transform 0.3s;
-            cursor: pointer;
-            border: none; /* S'assurer qu'il n'y a pas de bordure par défaut */
-        }
-        #add-lot-modal .form-button:hover {
-            transform: scale(1.05);
-        }
-        #add-lot-modal .primary-button {
-            background-color: var(--color-primary) !important;
-            color: var(--color-dark-bg) !important;
-        }
-        #add-lot-modal .cancel-button {
-            background-color: var(--color-card-bg) !important;
-            color: var(--color-text-white) !important;
         }
     </style>
 </head>
@@ -129,9 +62,10 @@
                 <h1 class="text-2xl font-bold text-white">Le Comptoir Circulaire</h1>
                 <p class="text-sm">Par GreenEcoGenius</p>
             </div>
-            <button id="add-lot-btn" class="bg-primary text-dark-bg font-bold py-2 px-6 rounded-full hover:bg-primary-darker transition duration-300">
+            <!-- CORRECTION : Le bouton est maintenant un lien vers la page de connexion -->
+            <a href="login.html" class="bg-primary text-dark-bg font-bold py-2 px-6 rounded-full hover:bg-primary-darker transition duration-300">
                 <i class="fas fa-plus-circle mr-2"></i>Vendre un lot
-            </button>
+            </a>
         </div>
     </header>
 
@@ -178,35 +112,11 @@
         </div>
     </main>
 
-    <!-- Modal pour ajouter un nouveau lot -->
-    <div id="add-lot-modal" class="modal-overlay hidden">
-        <div class="modal-content">
-            <h2 class="text-2xl font-bold mb-6 text-white">Vendre un nouveau lot</h2>
-            <form id="add-lot-form" class="space-y-4">
-                <div><label for="name" class="text-sm">Nom du matériau</label><input type="text" id="name" required></div>
-                <div><label for="category" class="text-sm">Catégorie</label><select id="category" required><option>Plastiques</option><option>Métaux</option><option>Papiers/Cartons</option><option>Verre</option><option>Bois</option></select></div>
-                <div class="grid grid-cols-2 gap-4">
-                    <div><label for="quantity" class="text-sm">Quantité</label><input type="number" id="quantity" required></div>
-                    <div><label for="unit" class="text-sm">Unité</label><select id="unit" required><option>tonnes</option><option>m³</option><option>kg</option></select></div>
-                </div>
-                 <div class="grid grid-cols-2 gap-4">
-                    <div><label for="price" class="text-sm">Prix (par unité)</label><input type="number" id="price" required></div>
-                    <div><label for="location" class="text-sm">Localisation (Ville, Pays)</label><input type="text" id="location" placeholder="Ex: Lyon, France" required></div>
-                 </div>
-                <div><label for="supplier" class="text-sm">Fournisseur</label><input type="text" id="supplier" required></div>
-                <div class="flex justify-end space-x-4 pt-4">
-                    <button type="button" id="cancel-btn" class="form-button cancel-button">Annuler</button>
-                    <button type="submit" class="form-button primary-button">Ajouter le lot</button>
-                </div>
-            </form>
-        </div>
-    </div>
-    
     <!-- Scripts Firebase -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getFirestore, collection, onSnapshot, addDoc, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, onSnapshot, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
         document.addEventListener('DOMContentLoaded', function() {
             let allMaterials = [];
@@ -217,16 +127,12 @@
             const categoryFilter = document.getElementById('category-filter');
             const countryFilter = document.getElementById('country-filter');
             const loadingIndicator = document.getElementById('loading-indicator');
-            const addLotModal = document.getElementById('add-lot-modal');
-            const addLotBtn = document.getElementById('add-lot-btn');
-            const cancelBtn = document.getElementById('cancel-btn');
-            const addLotForm = document.getElementById('add-lot-form');
             const chartCanvas = document.getElementById('volumeChart');
 
             function displayMaterials(filteredMaterials) {
                 grid.innerHTML = '';
                 if (filteredMaterials.length === 0 && loadingIndicator.style.display === 'none') {
-                    grid.innerHTML = '<p class="text-center col-span-full">Aucun matériau trouvé. Soyez le premier à ajouter un lot !</p>';
+                    grid.innerHTML = '<p class="text-center col-span-full">Aucun matériau trouvé pour cette recherche.</p>';
                     return;
                 }
                 filteredMaterials.forEach(material => {
@@ -242,7 +148,6 @@
                                 <div><p class="text-sm font-semibold text-white">${material.quantity} ${material.unit}</p><p class="text-xs">disponibles</p></div>
                                 <div class="text-right"><p class="text-lg font-bold text-primary">${new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(material.price)}</p><p class="text-xs">par ${material.unit === 'm³' ? 'm³' : 'tonne'}</p></div>
                             </div>
-                            <button class="w-full mt-4 bg-primary text-dark-bg font-bold py-2 rounded-lg hover:bg-primary-darker transition duration-300">Voir le lot</button>
                         </div>`;
                     grid.appendChild(card);
                 });
@@ -290,18 +195,8 @@
             }
 
             async function initializeAppLogic() {
-                // --- VOS CLÉS FIREBASE SONT INTÉGRÉES ICI ---
-                const firebaseConfig = {
-                    apiKey: "AIzaSyB0tQRqJaOgqIi7Sbk0v1JPJZbSabzMmBo",
-                    authDomain: "greenecogenius.firebaseapp.com",
-                    projectId: "greenecogenius",
-                    storageBucket: "greenecogenius.firebasestorage.app",
-                    messagingSenderId: "201115761499",
-                    appId: "1:201115761499:web:87f9961ff40f8a5e04387e",
-                    measurementId: "G-LNSR09QLWD"
-                };
-                
-                const appId = "greenecogenius"; // Utilisation de votre projectId comme app ID
+                const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+                const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
 
                 const app = initializeApp(firebaseConfig);
                 const db = getFirestore(app);
@@ -312,9 +207,8 @@
 
                 try {
                     await signInAnonymously(auth);
-                    
                     const userId = auth.currentUser ? auth.currentUser.uid : null;
-                    if (!userId) { throw new Error("Authentification échouée, aucun utilisateur trouvé."); }
+                    if (!userId) { throw new Error("Authentification échouée."); }
 
                     const materialsCollectionPath = `/artifacts/${appId}/public/data/materials`;
                     const materialsCol = collection(db, materialsCollectionPath);
@@ -326,39 +220,17 @@
                         updateChart(allMaterials);
                     }, (error) => {
                         console.error("Erreur de lecture de la base de données: ", error);
-                        if(loadingIndicator) loadingIndicator.innerHTML = '<p class="text-center col-span-full text-red-400">Erreur de connexion à la base de données. Vérifiez les permissions.</p>';
-                    });
-
-                    addLotForm.addEventListener('submit', async (e) => {
-                        e.preventDefault();
-                        const newLot = {
-                            name: addLotForm.name.value, category: addLotForm.category.value,
-                            quantity: parseFloat(addLotForm.quantity.value), unit: addLotForm.unit.value,
-                            price: parseFloat(addLotForm.price.value), location: addLotForm.location.value,
-                            supplier: addLotForm.supplier.value
-                        };
-                        try {
-                            await addDoc(materialsCol, newLot);
-                            addLotForm.reset();
-                            addLotModal.classList.add('hidden');
-                        } catch (error) { console.error("Erreur d'ajout du document: ", error); }
+                        if(loadingIndicator) loadingIndicator.innerHTML = '<p class="text-center col-span-full text-red-400">Erreur de connexion à la base de données.</p>';
                     });
 
                 } catch (error) {
-                    console.error("Erreur critique d'initialisation ou d'authentification:", error);
-                    if(loadingIndicator) loadingIndicator.innerHTML = '<p class="text-center col-span-full text-red-400">Erreur de connexion au service. L\'application ne peut pas démarrer.</p>';
+                    console.error("Erreur critique d'initialisation:", error);
+                    if(loadingIndicator) loadingIndicator.innerHTML = '<p class="text-center col-span-full text-red-400">Erreur de connexion au service.</p>';
                 }
 
                 searchInput.addEventListener('input', filterAndSearch);
                 categoryFilter.addEventListener('change', filterAndSearch);
                 countryFilter.addEventListener('change', filterAndSearch);
-                addLotBtn.addEventListener('click', () => addLotModal.classList.remove('hidden'));
-                cancelBtn.addEventListener('click', () => addLotModal.classList.add('hidden'));
-                addLotModal.addEventListener('click', (e) => {
-                    if (e.target === addLotModal) {
-                        addLotModal.classList.add('hidden');
-                    }
-                });
             }
 
             initializeAppLogic();
