@@ -62,7 +62,6 @@
                 <h1 class="text-2xl font-bold text-white">Le Comptoir Circulaire</h1>
                 <p class="text-sm">Par GreenEcoGenius</p>
             </div>
-            <!-- CORRECTION : Le bouton est maintenant un lien vers la page de connexion -->
             <a href="login.html" class="bg-primary text-dark-bg font-bold py-2 px-6 rounded-full hover:bg-primary-darker transition duration-300">
                 <i class="fas fa-plus-circle mr-2"></i>Vendre un lot
             </a>
@@ -116,7 +115,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getFirestore, collection, onSnapshot, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
         document.addEventListener('DOMContentLoaded', function() {
             let allMaterials = [];
@@ -130,9 +129,10 @@
             const chartCanvas = document.getElementById('volumeChart');
 
             function displayMaterials(filteredMaterials) {
+                if (!grid || !loadingIndicator) return;
                 grid.innerHTML = '';
                 if (filteredMaterials.length === 0 && loadingIndicator.style.display === 'none') {
-                    grid.innerHTML = '<p class="text-center col-span-full">Aucun matériau trouvé pour cette recherche.</p>';
+                    grid.innerHTML = '<p class="text-center col-span-full">Aucun matériau trouvé. Soyez le premier à ajouter un lot !</p>';
                     return;
                 }
                 filteredMaterials.forEach(material => {
@@ -154,6 +154,7 @@
             }
 
             function filterAndSearch() {
+                if(!searchInput) return;
                 const searchTerm = searchInput.value.toLowerCase();
                 const selectedCategory = categoryFilter.value;
                 const selectedCountry = countryFilter.value;
@@ -195,8 +196,16 @@
             }
 
             async function initializeAppLogic() {
-                const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
-                const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+                const firebaseConfig = {
+                    apiKey: "AIzaSyB0tQRqJaOgqIi7Sbk0v1JPJZbSabzMmBo",
+                    authDomain: "greenecogenius.firebaseapp.com",
+                    projectId: "greenecogenius",
+                    storageBucket: "greenecogenius.firebasestorage.app",
+                    messagingSenderId: "201115761499",
+                    appId: "1:201115761499:web:87f9961ff40f8a5e04387e",
+                    measurementId: "G-LNSR09QLWD"
+                };
+                const appId = "greenecogenius";
 
                 const app = initializeApp(firebaseConfig);
                 const db = getFirestore(app);
@@ -205,28 +214,30 @@
                 
                 initializeChart();
 
-                try {
-                    await signInAnonymously(auth);
-                    const userId = auth.currentUser ? auth.currentUser.uid : null;
-                    if (!userId) { throw new Error("Authentification échouée."); }
-
-                    const materialsCollectionPath = `/artifacts/${appId}/public/data/materials`;
-                    const materialsCol = collection(db, materialsCollectionPath);
-                    
-                    onSnapshot(materialsCol, (snapshot) => {
-                        allMaterials = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                        if(loadingIndicator) loadingIndicator.style.display = 'none';
-                        filterAndSearch();
-                        updateChart(allMaterials);
-                    }, (error) => {
-                        console.error("Erreur de lecture de la base de données: ", error);
-                        if(loadingIndicator) loadingIndicator.innerHTML = '<p class="text-center col-span-full text-red-400">Erreur de connexion à la base de données.</p>';
-                    });
-
-                } catch (error) {
-                    console.error("Erreur critique d'initialisation:", error);
-                    if(loadingIndicator) loadingIndicator.innerHTML = '<p class="text-center col-span-full text-red-400">Erreur de connexion au service.</p>';
-                }
+                // CORRECTION : Utilisation de onAuthStateChanged pour gérer les sessions
+                onAuthStateChanged(auth, (user) => {
+                    if (user) {
+                        // Un utilisateur est connecté (soit via login, soit anonymement)
+                        const materialsCollectionPath = `/artifacts/${appId}/public/data/materials`;
+                        const materialsCol = collection(db, materialsCollectionPath);
+                        
+                        onSnapshot(materialsCol, (snapshot) => {
+                            allMaterials = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                            if(loadingIndicator) loadingIndicator.style.display = 'none';
+                            filterAndSearch();
+                            updateChart(allMaterials);
+                        }, (error) => {
+                            console.error("Erreur de lecture de la base de données: ", error);
+                            if(loadingIndicator) loadingIndicator.innerHTML = '<p class="text-center col-span-full text-red-400">Erreur de connexion à la base de données.</p>';
+                        });
+                    } else {
+                        // Personne n'est connecté, on essaie une connexion anonyme
+                        signInAnonymously(auth).catch(error => {
+                             console.error("Erreur de connexion anonyme:", error);
+                             if(loadingIndicator) loadingIndicator.innerHTML = '<p class="text-center col-span-full text-red-400">Le service est momentanément indisponible.</p>';
+                        });
+                    }
+                });
 
                 searchInput.addEventListener('input', filterAndSearch);
                 categoryFilter.addEventListener('change', filterAndSearch);
@@ -238,3 +249,4 @@
     </script>
 </body>
 </html>
+
