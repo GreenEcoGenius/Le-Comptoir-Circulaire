@@ -71,6 +71,7 @@
             border-radius: 0.5rem;
             margin-bottom: 1rem;
             font-size: 0.9rem;
+            text-align: center;
         }
         .success {
             background-color: rgba(46, 204, 113, 0.2);
@@ -121,7 +122,7 @@
                     <input type="email" id="signup-email" required class="w-full p-3 rounded-lg">
                 </div>
                 <div>
-                    <label for="signup-password" class="block mb-2 text-sm font-medium">Mot de passe</label>
+                    <label for="signup-password" class="block mb-2 text-sm font-medium">Mot de passe (6 caractères minimum)</label>
                     <input type="password" id="signup-password" required class="w-full p-3 rounded-lg">
                 </div>
                 <button type="submit" class="auth-button w-full font-bold py-3 rounded-lg">Créer mon compte</button>
@@ -138,19 +139,20 @@
     <!-- Scripts Firebase -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         document.addEventListener('DOMContentLoaded', () => {
-            // --- CONFIGURATION FIREBASE ---
-            const firebaseConfig = typeof __firebase_config !== 'undefined' 
-                ? JSON.parse(__firebase_config)
-                : {
-                    apiKey: "VOTRE_API_KEY",
-                    authDomain: "VOTRE_AUTH_DOMAIN",
-                    projectId: "VOTRE_PROJECT_ID",
-                    // ... autres clés
-                };
+            // --- CONFIGURATION FIREBASE AVEC VOS VRAIES CLÉS ---
+            const firebaseConfig = {
+                apiKey: "AIzaSyB0tQRqJaOgqIi7Sbk0v1JPJZbSabzMmBo",
+                authDomain: "greenecogenius.firebaseapp.com",
+                projectId: "greenecogenius",
+                storageBucket: "greenecogenius.firebasestorage.app",
+                messagingSenderId: "201115761499",
+                appId: "1:201115761499:web:87f9961ff40f8a5e04387e",
+                measurementId: "G-LNSR09QLWD"
+            };
                 
             // --- INITIALISATION ---
             const app = initializeApp(firebaseConfig);
@@ -172,6 +174,7 @@
             }
 
             function toggleForms(showSignup) {
+                feedbackDiv.classList.add('hidden'); // Cacher les messages en changeant de formulaire
                 if (showSignup) {
                     loginForm.classList.add('hidden');
                     signupForm.classList.remove('hidden');
@@ -199,21 +202,31 @@
                 createUserWithEmailAndPassword(auth, email, password)
                     .then((userCredential) => {
                         const user = userCredential.user;
-                        // Enregistrer les informations de l'entreprise dans Firestore
                         const userProfileRef = doc(db, "companies", user.uid);
                         return setDoc(userProfileRef, {
                             companyName: company,
                             email: email,
                             createdAt: new Date(),
-                            isVerified: false // Admin devra vérifier le compte
+                            isVerified: false 
                         });
                     })
                     .then(() => {
-                        showFeedback('Inscription réussie ! Vous serez redirigé.', 'success');
-                        setTimeout(() => window.location.href = '/le-comptoir-circulaire', 2000); // Redirige vers l'app
+                        showFeedback('Inscription réussie ! Vous serez redirigé vers le Comptoir.', 'success');
+                        setTimeout(() => {
+                            // Redirige vers la page principale
+                            const currentUrl = window.location.href;
+                            const newUrl = currentUrl.replace('login.html', '');
+                            window.location.href = newUrl;
+                        }, 2000); 
                     })
                     .catch((error) => {
-                        showFeedback(error.message, 'error');
+                         let friendlyMessage = "Une erreur est survenue. Veuillez réessayer.";
+                         if (error.code == 'auth/email-already-in-use') {
+                            friendlyMessage = "Cette adresse e-mail est déjà utilisée par un autre compte.";
+                         } else if (error.code == 'auth/weak-password') {
+                            friendlyMessage = "Le mot de passe doit contenir au moins 6 caractères.";
+                         }
+                        showFeedback(friendlyMessage, 'error');
                     });
             });
 
@@ -226,11 +239,14 @@
                 signInWithEmailAndPassword(auth, email, password)
                     .then((userCredential) => {
                          showFeedback('Connexion réussie ! Redirection...', 'success');
-                        // Rediriger vers l'application principale
-                        setTimeout(() => window.location.href = '/le-comptoir-circulaire', 1500); // Mettre le lien de la page de l'app
+                        setTimeout(() => {
+                            const currentUrl = window.location.href;
+                            const newUrl = currentUrl.replace('login.html', '');
+                            window.location.href = newUrl;
+                        }, 1500);
                     })
                     .catch((error) => {
-                        showFeedback("Email ou mot de passe incorrect.", 'error');
+                        showFeedback("L'email ou le mot de passe est incorrect.", 'error');
                     });
             });
 
