@@ -216,21 +216,20 @@
 
                 // CORRECTION : Utilisation de onAuthStateChanged pour gérer les sessions
                 onAuthStateChanged(auth, (user) => {
-                    if (user) {
-                        // Un utilisateur est connecté (soit via login, soit anonymement)
-                        const materialsCollectionPath = `/artifacts/${appId}/public/data/materials`;
-                        const materialsCol = collection(db, materialsCollectionPath);
+                    const materialsCollectionPath = `/artifacts/${appId}/public/data/materials`;
+                    const materialsCol = collection(db, materialsCollectionPath);
                         
-                        onSnapshot(materialsCol, (snapshot) => {
-                            allMaterials = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                            if(loadingIndicator) loadingIndicator.style.display = 'none';
-                            filterAndSearch();
-                            updateChart(allMaterials);
-                        }, (error) => {
-                            console.error("Erreur de lecture de la base de données: ", error);
-                            if(loadingIndicator) loadingIndicator.innerHTML = '<p class="text-center col-span-full text-red-400">Erreur de connexion à la base de données.</p>';
-                        });
-                    } else {
+                    onSnapshot(materialsCol, (snapshot) => {
+                        allMaterials = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                        if(loadingIndicator) loadingIndicator.style.display = 'none';
+                        filterAndSearch();
+                        updateChart(allMaterials);
+                    }, (error) => {
+                        console.error("Erreur de lecture de la base de données: ", error);
+                        if(loadingIndicator) loadingIndicator.innerHTML = '<p class="text-center col-span-full text-red-400">Erreur de connexion à la base de données.</p>';
+                    });
+
+                    if (!user) {
                         // Personne n'est connecté, on essaie une connexion anonyme
                         signInAnonymously(auth).catch(error => {
                              console.error("Erreur de connexion anonyme:", error);
