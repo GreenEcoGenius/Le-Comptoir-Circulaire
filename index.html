@@ -97,7 +97,6 @@
 
     <!-- Corps principal -->
     <main class="container mx-auto px-6 py-8">
-        <!-- ... (le reste de la structure main reste identique) ... -->
         <div class="bg-[var(--color-secondary-bg)] p-6 rounded-lg shadow-xl mb-8">
              <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
                 <div class="md:col-span-2 lg:col-span-2">
@@ -144,8 +143,15 @@
                 <h2 class="text-2xl font-bold">Vendre un nouveau lot</h2>
                 <button data-close-modal="sell-material-modal" class="text-gray-400 hover:text-white text-2xl">&times;</button>
             </div>
-            <form id="add-material-form">
-                <!-- ... (champs du formulaire identiques) ... -->
+            <form id="add-material-form" class="space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div><label for="material-name" class="block mb-2 text-sm">Nom du matériau</label><input type="text" id="material-name" placeholder="Ex: PET Recyclé" required class="form-input w-full rounded-lg p-2"></div>
+                    <div><label for="material-category" class="block mb-2 text-sm">Catégorie</label><select id="material-category" required class="form-select w-full rounded-lg p-2"><option value="Plastiques">Plastiques</option><option value="Métaux">Métaux</option><option value="Papiers/Cartons">Papiers/Cartons</option><option value="Verre">Verre</option><option value="Bois">Bois</option></select></div>
+                    <div><label for="material-quantity" class="block mb-2 text-sm">Quantité</label><input type="number" step="0.01" id="material-quantity" placeholder="10.5" required class="form-input w-full rounded-lg p-2"></div>
+                    <div><label for="material-unit" class="block mb-2 text-sm">Unité</label><select id="material-unit" required class="form-select w-full rounded-lg p-2"><option value="tonnes">tonnes</option><option value="kg">kg</option><option value="m³">m³</option></select></div>
+                    <div><label for="material-price" class="block mb-2 text-sm">Prix par unité (€)</label><input type="number" step="0.01" id="material-price" placeholder="550.00" required class="form-input w-full rounded-lg p-2"></div>
+                    <div><label for="material-location" class="block mb-2 text-sm">Localisation</label><input type="text" id="material-location" placeholder="Lyon, France" required class="form-input w-full rounded-lg p-2"></div>
+                </div>
                 <div class="mt-8 flex justify-end">
                     <button id="submit-material-btn" type="submit" class="bg-[var(--color-primary)] font-bold py-3 px-8 rounded-full hover:bg-[var(--color-primary-darker)] transition duration-300 w-48 text-center">
                         <span class="btn-text btn-primary-text">Mettre en vente</span>
@@ -209,12 +215,10 @@
     <!-- Scripts Firebase -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getFirestore, collection, onSnapshot, addDoc, doc, getDoc, writeBatch, deleteDoc, setDoc, query, where, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, onSnapshot, addDoc, doc, getDoc, writeBatch, setDoc, query, where, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
-        // ... (le script JavaScript a été entièrement réécrit pour gérer les nouvelles fonctionnalités)
         document.addEventListener('DOMContentLoaded', function() {
-            // Configuration Firebase
             const firebaseConfig = {
               apiKey: "AIzaSyB0tQRqJaOgqIi7Sbk0v1JPJZbSabzMmBo",
               authDomain: "greenecogenius.firebaseapp.com",
@@ -225,16 +229,14 @@
               measurementId: "G-LNSR09QLWD"
             };
 
-            // Initialisation
             const app = initializeApp(firebaseConfig);
             const db = getFirestore(app);
             const auth = getAuth(app);
             
             let allMaterials = [];
             let currentUser = null;
-            let volumeChart;
+            let currentUserData = {};
             
-            // --- Gestion de l'état de l'interface (UI) ---
             const ui = {
                 loggedOutView: document.getElementById('logged-out-view'),
                 loggedInView: document.getElementById('logged-in-view'),
@@ -242,66 +244,58 @@
                 grid: document.getElementById('materials-grid'),
                 loadingIndicator: document.getElementById('loading-indicator'),
                 
-                update: (user) => {
+                update: async (user) => {
                     if (user) {
                         currentUser = user;
+                        const userDoc = await getDoc(doc(db, 'users', user.uid));
+                        if(userDoc.exists()) {
+                            currentUserData = userDoc.data();
+                            ui.accountMenuBtn.textContent = (currentUserData.name || currentUserData.email)[0];
+                        }
                         ui.loggedOutView.classList.add('hidden');
                         ui.loggedInView.classList.remove('hidden');
-                        // Récupérer le nom d'utilisateur pour l'initiale
-                        getDoc(doc(db, 'users', user.uid)).then(userDoc => {
-                            if(userDoc.exists()) {
-                                const userData = userDoc.data();
-                                ui.accountMenuBtn.textContent = (userData.name || userData.email)[0];
-                            }
-                        });
                     } else {
                         currentUser = null;
+                        currentUserData = {};
                         ui.loggedOutView.classList.remove('hidden');
                         ui.loggedInView.classList.add('hidden');
                     }
-                    displayMaterials(); // Rafraîchir l'affichage des matériaux
+                    displayMaterials();
                 }
             };
-
-            // --- Logique d'affichage des matériaux ---
+            
             function displayMaterials() {
                 const search = document.getElementById('search-input').value.toLowerCase();
                 const category = document.getElementById('category-filter').value;
                 const country = document.getElementById('country-filter').value;
-
                 const filtered = allMaterials.filter(material => {
                     const countryMatch = country === 'all' || (material.location || '').toLowerCase().includes(country.toLowerCase());
                     const categoryMatch = category === 'all' || material.category === category;
-                    const searchMatch = search === '' || (material.name || '').toLowerCase().includes(search) || (material.supplier || '').toLowerCase().includes(search);
+                    const searchMatch = search === '' || (material.name || '').toLowerCase().includes(search) || (material.supplierName || '').toLowerCase().includes(search);
                     return countryMatch && categoryMatch && searchMatch;
                 });
-
                 ui.grid.innerHTML = '';
-                if(filtered.length === 0) {
+                if(filtered.length === 0 && ui.loadingIndicator.style.display === 'none') {
                     ui.grid.innerHTML = `<p class="col-span-full text-center">Aucun matériau ne correspond à votre recherche.</p>`;
                     return;
                 }
-
                 filtered.forEach(material => {
                     const card = document.createElement('div');
                     card.className = 'bg-[var(--color-card-bg)] rounded-lg shadow-lg overflow-hidden flex flex-col justify-between transform hover:-translate-y-2 transition duration-300 fade-in';
-                    
                     const isOwner = currentUser && material.sellerId === currentUser.uid;
-
-                    let actionButtonHTML = '';
+                    let actionButtonHTML = `<div class="p-4 bg-[var(--color-dark-bg)]"><button class="bg-gray-500 text-white font-bold py-2 px-4 rounded-full w-full cursor-not-allowed" disabled>Connectez-vous pour acheter</button></div>`;
                     if (currentUser && !isOwner) {
-                         actionButtonHTML = `<button data-buy-id="${material.id}" class="bg-[var(--color-primary)] btn-primary-text font-bold py-2 px-4 rounded-full w-full">Acheter ce lot</button>`;
+                         actionButtonHTML = `<div class="p-4 bg-[var(--color-dark-bg)]"><button data-buy-id="${material.id}" class="bg-[var(--color-primary)] btn-primary-text font-bold py-2 px-4 rounded-full w-full">Acheter ce lot</button></div>`;
                     } else if (isOwner) {
-                         actionButtonHTML = `<div class="tag-own text-center font-bold py-2 px-4 rounded-full w-full">Votre lot</div>`;
+                         actionButtonHTML = `<div class="p-4 bg-[var(--color-dark-bg)]"><div class="tag-own text-center font-bold py-2 px-4 rounded-full w-full">Votre lot</div></div>`;
                     }
-
                     card.innerHTML = `
                         <div>
                             <img src="https://placehold.co/600x400/112f3b/5affb5?text=${encodeURIComponent(material.category)}" alt="${material.name}" class="w-full h-40 object-cover">
                             <div class="p-5">
                                 <span class="tag text-xs font-semibold py-1 px-3 rounded-full">${material.category}</span>
                                 <h3 class="text-lg font-bold mt-3">${material.name}</h3>
-                                <p class="text-sm mt-2 opacity-80"><i class="fas fa-user mr-2"></i>${material.supplier}</p>
+                                <p class="text-sm mt-2 opacity-80"><i class="fas fa-user mr-2"></i>${material.supplierName}</p>
                                 <p class="text-sm mt-1 opacity-80"><i class="fas fa-map-marker-alt mr-2"></i>${material.location}</p>
                                 <div class="mt-4 flex justify-between items-center">
                                     <div><p class="text-sm font-semibold">${material.quantity} ${material.unit}</p><p class="text-xs opacity-80">disponibles</p></div>
@@ -309,98 +303,127 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="p-4 bg-[var(--color-dark-bg)]">
-                           ${actionButtonHTML}
-                        </div>
-                    `;
+                        ${actionButtonHTML}`;
                     ui.grid.appendChild(card);
                 });
             }
 
-
-            // --- Listener Principal ---
-            onAuthStateChanged(auth, user => {
-                ui.update(user);
-                // Charger les matériaux uniquement après avoir déterminé l'état de l'utilisateur
-                const materialsCol = collection(db, 'materials');
-                onSnapshot(materialsCol, snapshot => {
-                    allMaterials = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                    ui.loadingIndicator.style.display = 'none';
-                    displayMaterials();
-                    // updateChart(allMaterials); // Mettre à jour le graphique si nécessaire
-                }, error => {
-                    console.error("Erreur de lecture:", error);
-                    ui.loadingIndicator.textContent = 'Erreur de connexion à la base de données.';
-                });
+            onAuthStateChanged(auth, ui.update);
+            const materialsCol = collection(db, 'materials');
+            onSnapshot(materialsCol, snapshot => {
+                allMaterials = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                ui.loadingIndicator.style.display = 'none';
+                displayMaterials();
+            }, error => {
+                ui.loadingIndicator.textContent = 'Erreur de connexion à la base de données.';
             });
-
-            // --- Ajout des listeners d'événements ---
+            
             document.addEventListener('click', e => {
-                // Gestion des modales
-                if(e.target.matches('[data-close-modal]')) {
-                    document.getElementById(e.target.dataset.closeModal).classList.add('hidden');
-                }
-                if(e.target.matches('#open-login-modal-btn')) document.getElementById('login-modal').classList.remove('hidden');
-                if(e.target.matches('#open-register-modal-btn')) document.getElementById('register-modal').classList.remove('hidden');
-                if(e.target.matches('#open-sell-modal-btn')) {
-                    if(currentUser) document.getElementById('sell-material-modal').classList.remove('hidden');
-                    else document.getElementById('login-modal').classList.remove('hidden');
-                }
-                
-                // Logique d'achat
-                if(e.target.matches('[data-buy-id]')) {
-                    const materialId = e.target.dataset.buyId;
+                const target = e.target;
+                if(target.closest('[data-close-modal]')) document.getElementById(target.closest('[data-close-modal]').dataset.closeModal).classList.add('hidden');
+                if(target.closest('#open-login-modal-btn')) document.getElementById('login-modal').classList.remove('hidden');
+                if(target.closest('#open-register-modal-btn')) document.getElementById('register-modal').classList.remove('hidden');
+                if(target.closest('#open-sell-modal-btn')) document.getElementById('sell-material-modal').classList.remove('hidden');
+                if(target.closest('#logout-btn')) signOut(auth);
+                if(target.closest('#open-account-btn')) openAccountModal();
+                if(target.closest('[data-buy-id]')) {
+                    const materialId = target.closest('[data-buy-id]').dataset.buyId;
                     const material = allMaterials.find(m => m.id === materialId);
-                    if(!material) return;
-                    
                     const modal = document.getElementById('buy-confirmation-modal');
-                    modal.querySelector('#buy-confirmation-text').textContent = `Êtes-vous sûr de vouloir acheter "${material.name}" pour ${new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(material.price || 0)} ?`;
+                    modal.querySelector('#buy-confirmation-text').textContent = `Acheter "${material.name}" pour ${new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(material.price || 0)} ?`;
                     modal.querySelector('#confirm-buy-btn').dataset.materialId = materialId;
                     modal.classList.remove('hidden');
                 }
+                if(target.closest('#confirm-buy-btn')) buyMaterial(target.closest('#confirm-buy-btn').dataset.materialId);
             });
-
-            // Listeners pour les filtres
+            
             document.getElementById('search-input').addEventListener('input', displayMaterials);
             document.getElementById('category-filter').addEventListener('change', displayMaterials);
             document.getElementById('country-filter').addEventListener('change', displayMaterials);
             
-            // --- Logiques des formulaires ---
-            
-            // Inscription
             document.getElementById('register-form').addEventListener('submit', async e => {
                 e.preventDefault();
-                const name = document.getElementById('register-name').value;
-                const email = document.getElementById('register-email').value;
-                const password = document.getElementById('register-password').value;
-                const errorEl = document.getElementById('register-error');
+                const name = e.target['register-name'].value;
+                const email = e.target['register-email'].value;
+                const password = e.target['register-password'].value;
                 try {
-                    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-                    await setDoc(doc(db, "users", userCredential.user.uid), { name, email, createdAt: new Date() });
+                    const cred = await createUserWithEmailAndPassword(auth, email, password);
+                    await setDoc(doc(db, "users", cred.user.uid), { name, email, createdAt: serverTimestamp() });
                     document.getElementById('register-modal').classList.add('hidden');
                     e.target.reset();
-                } catch (error) {
-                    errorEl.textContent = "Erreur: " + error.message;
-                }
+                } catch (error) { document.getElementById('register-error').textContent = error.message; }
             });
 
-            // Connexion
             document.getElementById('login-form').addEventListener('submit', async e => {
                 e.preventDefault();
-                const email = document.getElementById('login-email').value;
-                const password = document.getElementById('login-password').value;
-                const errorEl = document.getElementById('login-error');
+                const email = e.target['login-email'].value;
+                const password = e.target['login-password'].value;
                 try {
                     await signInWithEmailAndPassword(auth, email, password);
                     document.getElementById('login-modal').classList.add('hidden');
                     e.target.reset();
-                } catch (error) {
-                    errorEl.textContent = "Email ou mot de passe incorrect.";
-                }
+                } catch (error) { document.getElementById('login-error').textContent = "Email ou mot de passe incorrect."; }
             });
-            
-            // Déconnexion
-            document.getElementById('logout-btn').addEventListener('click', () => signOut(auth));
+
+            document.getElementById('add-material-form').addEventListener('submit', async e => {
+                e.preventDefault();
+                if(!currentUser) return;
+                const newMaterial = {
+                    name: e.target['material-name'].value, category: e.target['material-category'].value,
+                    quantity: parseFloat(e.target['material-quantity'].value), unit: e.target['material-unit'].value,
+                    price: parseFloat(e.target['material-price'].value), location: e.target['material-location'].value,
+                    sellerId: currentUser.uid, supplierName: currentUserData.name, createdAt: serverTimestamp()
+                };
+                try {
+                    await addDoc(collection(db, 'materials'), newMaterial);
+                    document.getElementById('sell-material-modal').classList.add('hidden');
+                    e.target.reset();
+                } catch(error) { document.getElementById('sell-form-error').textContent = error.message; }
+            });
+
+            async function buyMaterial(materialId) {
+                if(!currentUser) return;
+                const materialRef = doc(db, 'materials', materialId);
+                const materialDoc = await getDoc(materialRef);
+                if (!materialDoc.exists()) { console.error("Lot introuvable!"); return; }
+                const batch = writeBatch(db);
+                const purchaseRef = doc(collection(db, 'purchases'));
+                batch.set(purchaseRef, { ...materialDoc.data(), buyerId: currentUser.uid, purchaseDate: serverTimestamp() });
+                batch.delete(materialRef);
+                await batch.commit();
+                document.getElementById('buy-confirmation-modal').classList.add('hidden');
+            }
+
+            async function openAccountModal() {
+                const accountModal = document.getElementById('account-modal');
+                let salesHTML = '<div>Aucune vente en cours.</div>';
+                let purchasesHTML = '<div>Aucun achat.</div>';
+                
+                const salesQuery = query(collection(db, "materials"), where("sellerId", "==", currentUser.uid));
+                const salesSnapshot = await getDocs(salesQuery);
+                if(!salesSnapshot.empty) {
+                    salesHTML = salesSnapshot.docs.map(d => `<div class="p-2 bg-gray-700 rounded">${d.data().name} - ${d.data().quantity} ${d.data().unit}</div>`).join('');
+                }
+
+                const purchasesQuery = query(collection(db, "purchases"), where("buyerId", "==", currentUser.uid));
+                const purchasesSnapshot = await getDocs(purchasesQuery);
+                if(!purchasesSnapshot.empty) {
+                    purchasesHTML = purchasesSnapshot.docs.map(d => `<div class="p-2 bg-gray-700 rounded">${d.data().name} - ${new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(d.data().price)}</div>`).join('');
+                }
+                
+                accountModal.innerHTML = `
+                    <div class="bg-[var(--color-secondary-bg)] rounded-lg shadow-2xl p-8 w-full max-w-3xl modal-content max-h-[80vh] overflow-y-auto">
+                        <div class="flex justify-between items-center mb-6">
+                            <h2 class="text-2xl font-bold">Mon Compte</h2>
+                            <button data-close-modal="account-modal" class="text-gray-400 hover:text-white text-2xl">&times;</button>
+                        </div>
+                        <div class="space-y-6">
+                            <div><h3 class="font-bold text-lg mb-2">Mes Ventes</h3><div class="space-y-2">${salesHTML}</div></div>
+                            <div><h3 class="font-bold text-lg mb-2">Mes Achats</h3><div class="space-y-2">${purchasesHTML}</div></div>
+                        </div>
+                    </div>`;
+                accountModal.classList.remove('hidden');
+            }
         });
     </script>
 </body>
