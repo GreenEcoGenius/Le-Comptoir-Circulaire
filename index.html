@@ -28,13 +28,15 @@
             --color-primary-darker: #49db9f;
             --font-main: 'Poppins', sans-serif;
         }
-        #le-comptoir-app {
+        body {
             font-family: var(--font-main);
             background-color: var(--color-dark-bg);
             color: var(--color-text);
+        }
+        #le-comptoir-app {
             min-height: 100vh;
         }
-        #le-comptoir-app p, #le-comptoir-app div, #le-comptoir-app span, #le-comptoir-app li {
+        #le-comptoir-app p, #le-comptoir-app div, #le-comptoir-app span, #le-comptoir-app li, #le-comptoir-app select, #le-comptoir-app input {
             color: var(--color-text) !important;
         }
         #le-comptoir-app h1, #le-comptoir-app h2, #le-comptoir-app h3, #le-comptoir-app h4, #le-comptoir-app label {
@@ -51,9 +53,19 @@
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
+        .modal-backdrop {
+             animation: fadeIn 0.3s ease-in-out;
+        }
+        .modal-content {
+            animation: slideInUp 0.4s ease-in-out;
+        }
+        @keyframes slideInUp {
+            from { opacity: 0; transform: translateY(50px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
     </style>
 </head>
-<body id="le-comptoir-app">
+<body id="le-comptoir-app" class="relative">
 
     <!-- En-tête de l'application -->
     <header class="bg-secondary-bg shadow-lg">
@@ -62,9 +74,10 @@
                 <h1 class="text-2xl font-bold text-white">Le Comptoir Circulaire</h1>
                 <p class="text-sm">Par GreenEcoGenius</p>
             </div>
-            <a href="login.html" class="bg-primary text-dark-bg font-bold py-2 px-6 rounded-full hover:bg-primary-darker transition duration-300">
+            <!-- Bouton corrigé pour ouvrir la modale -->
+            <button id="open-modal-btn" class="bg-primary text-dark-bg font-bold py-2 px-6 rounded-full hover:bg-primary-darker transition duration-300">
                 <i class="fas fa-plus-circle mr-2"></i>Vendre un lot
-            </a>
+            </button>
         </div>
     </header>
 
@@ -111,25 +124,76 @@
         </div>
     </main>
 
+    <!-- Fenêtre Modale pour Ajouter un Lot (cachée par défaut) -->
+    <div id="add-material-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 z-50 flex justify-center items-center p-4 modal-backdrop">
+        <div class="bg-secondary-bg rounded-lg shadow-2xl p-8 w-full max-w-2xl modal-content">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-white">Vendre un nouveau lot</h2>
+                <button id="close-modal-btn" class="text-gray-400 hover:text-white text-2xl">&times;</button>
+            </div>
+            <form id="add-material-form">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="material-name" class="block mb-2 text-sm font-medium">Nom du matériau</label>
+                        <input type="text" id="material-name" placeholder="Ex: PET Recyclé" required class="w-full bg-dark-bg border border-secondary-bg rounded-lg py-2 px-4 focus:outline-none focus:ring-2 focus:ring-primary">
+                    </div>
+                    <div>
+                        <label for="material-category" class="block mb-2 text-sm font-medium">Catégorie</label>
+                        <select id="material-category" required class="w-full bg-dark-bg border border-secondary-bg rounded-lg py-2 px-3 focus:outline-none focus:ring-2 focus:ring-primary">
+                            <option value="Plastiques">Plastiques</option><option value="Métaux">Métaux</option><option value="Papiers/Cartons">Papiers/Cartons</option><option value="Verre">Verre</option><option value="Bois">Bois</option>
+                        </select>
+                    </div>
+                     <div class="md:col-span-2">
+                        <label for="material-supplier" class="block mb-2 text-sm font-medium">Fournisseur</label>
+                        <input type="text" id="material-supplier" placeholder="Nom de votre entreprise" required class="w-full bg-dark-bg border border-secondary-bg rounded-lg py-2 px-4 focus:outline-none focus:ring-2 focus:ring-primary">
+                    </div>
+                    <div>
+                        <label for="material-quantity" class="block mb-2 text-sm font-medium">Quantité</label>
+                        <input type="number" step="0.01" id="material-quantity" placeholder="Ex: 10.5" required class="w-full bg-dark-bg border border-secondary-bg rounded-lg py-2 px-4 focus:outline-none focus:ring-2 focus:ring-primary">
+                    </div>
+                     <div>
+                        <label for="material-unit" class="block mb-2 text-sm font-medium">Unité</label>
+                        <select id="material-unit" required class="w-full bg-dark-bg border border-secondary-bg rounded-lg py-2 px-3 focus:outline-none focus:ring-2 focus:ring-primary">
+                            <option value="tonnes">tonnes</option><option value="kg">kg</option><option value="m³">m³</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="material-price" class="block mb-2 text-sm font-medium">Prix par unité (€)</label>
+                        <input type="number" step="0.01" id="material-price" placeholder="Ex: 550.00" required class="w-full bg-dark-bg border border-secondary-bg rounded-lg py-2 px-4 focus:outline-none focus:ring-2 focus:ring-primary">
+                    </div>
+                    <div>
+                        <label for="material-location" class="block mb-2 text-sm font-medium">Localisation</label>
+                        <input type="text" id="material-location" placeholder="Ex: Lyon, France" required class="w-full bg-dark-bg border border-secondary-bg rounded-lg py-2 px-4 focus:outline-none focus:ring-2 focus:ring-primary">
+                    </div>
+                </div>
+                <div class="mt-8 flex justify-end">
+                    <button type="submit" class="bg-primary text-dark-bg font-bold py-3 px-8 rounded-full hover:bg-primary-darker transition duration-300">
+                        Mettre en vente
+                    </button>
+                </div>
+                 <p id="form-error-message" class="text-red-400 mt-4 text-right"></p>
+            </form>
+        </div>
+    </div>
+
+
     <!-- Scripts Firebase -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getFirestore, collection, onSnapshot, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, onSnapshot, addDoc, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
         document.addEventListener('DOMContentLoaded', function() {
+            // --- Déclaration des variables globales pour le script ---
             let allMaterials = [];
             let volumeChart;
-            
-            // Facteurs d'émission de CO2 par tonne de matériau (en kg CO2eq / tonne) - Données d'exemple
-            const co2Factors = {
-                "Plastiques": 2100, // ex: PET
-                "Métaux": 6500, // ex: Aluminium
-                "Papiers/Cartons": 800,
-                "Verre": 400,
-                "Bois": 50
-            };
+            let db; // Pour rendre la base de données accessible partout dans le script
+            const appId = "greenecogenius";
 
+            // --- Facteurs CO2 ---
+            const co2Factors = {"Plastiques": 2100, "Métaux": 6500, "Papiers/Cartons": 800, "Verre": 400, "Bois": 50};
+            
+            // --- Éléments du DOM ---
             const grid = document.getElementById('materials-grid');
             const searchInput = document.getElementById('search-input');
             const categoryFilter = document.getElementById('category-filter');
@@ -137,30 +201,37 @@
             const loadingIndicator = document.getElementById('loading-indicator');
             const chartCanvas = document.getElementById('volumeChart');
 
+            // --- Éléments de la modale ---
+            const modal = document.getElementById('add-material-modal');
+            const openModalBtn = document.getElementById('open-modal-btn');
+            const closeModalBtn = document.getElementById('close-modal-btn');
+            const addMaterialForm = document.getElementById('add-material-form');
+            const formErrorMessage = document.getElementById('form-error-message');
+
+            // --- Fonctions de l'UI ---
             function displayMaterials(filteredMaterials) {
                 if (!grid || !loadingIndicator) return;
                 grid.innerHTML = '';
                 if (filteredMaterials.length === 0 && loadingIndicator.style.display === 'none') {
-                    grid.innerHTML = '<p class="text-center col-span-full">Aucun matériau trouvé. Soyez le premier à ajouter un lot !</p>';
+                    grid.innerHTML = '<p class="text-center col-span-full">Aucun matériau trouvé. Cliquez sur "Vendre un lot" pour en ajouter un !</p>';
                     return;
                 }
                 filteredMaterials.forEach(material => {
-                    // Calcul de l'économie de CO2
                     const factor = co2Factors[material.category] || 0;
-                    const co2Saved = (factor * material.quantity).toFixed(0);
+                    const co2Saved = (factor * (material.quantity || 0)).toFixed(0);
 
                     const card = document.createElement('div');
                     card.className = 'bg-card-bg rounded-lg shadow-lg overflow-hidden flex flex-col justify-between transform hover:-translate-y-2 transition duration-300 fade-in';
                     card.innerHTML = `
                         <div>
-                            <img src="https://placehold.co/600x400/112f3b/5affb5?text=${encodeURIComponent(material.category)}" alt="${material.name}" class="w-full h-40 object-cover">
+                            <img src="https://placehold.co/600x400/${'112f3b'}/${'5affb5'}?text=${encodeURIComponent(material.category)}" alt="${material.name}" class="w-full h-40 object-cover">
                             <div class="p-5">
                                 <span class="tag text-xs font-semibold py-1 px-3 rounded-full">${material.category}</span>
                                 <h3 class="text-lg font-bold mt-3 text-white">${material.name}</h3>
                                 <p class="text-sm mt-2 opacity-80"><i class="fas fa-map-marker-alt mr-2"></i>${material.location}</p>
                                 <div class="mt-4 flex justify-between items-center">
                                     <div><p class="text-sm font-semibold text-white">${material.quantity} ${material.unit}</p><p class="text-xs opacity-80">disponibles</p></div>
-                                    <div class="text-right"><p class="text-lg font-bold text-primary">${new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(material.price)}</p><p class="text-xs opacity-80">par ${material.unit === 'm³' ? 'm³' : 'tonne'}</p></div>
+                                    <div class="text-right"><p class="text-lg font-bold text-primary">${new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(material.price || 0)}</p><p class="text-xs opacity-80">par ${material.unit}</p></div>
                                 </div>
                             </div>
                         </div>
@@ -213,44 +284,79 @@
                     volumeChart.update();
                 }
             }
+            
+            // --- Logique de la Modale ---
+            function openModal() { if (modal) modal.classList.remove('hidden'); }
+            function closeModal() { if (modal) modal.classList.add('hidden'); }
 
-            async function initializeAppLogic() {
-                const firebaseConfig = {
-                    apiKey: "AIzaSyB0tQRqJaOgqIi7Sbk0v1JPJZbSabzMmBo",
-                    authDomain: "greenecogenius.firebaseapp.com",
-                    projectId: "greenecogenius",
-                    storageBucket: "greenecogenius.firebasestorage.app",
-                    messagingSenderId: "201115761499",
-                    appId: "1:201115761499:web:87f9961ff40f8a5e04387e",
-                    measurementId: "G-LNSR09QLWD"
+            openModalBtn.addEventListener('click', openModal);
+            closeModalBtn.addEventListener('click', closeModal);
+
+            // --- Logique d'ajout à Firestore ---
+            async function addMaterialToFirestore(event) {
+                event.preventDefault(); // Empêche le rechargement de la page
+                formErrorMessage.textContent = ''; // Vider les anciens messages d'erreur
+
+                const newMaterial = {
+                    name: document.getElementById('material-name').value,
+                    category: document.getElementById('material-category').value,
+                    quantity: parseFloat(document.getElementById('material-quantity').value),
+                    unit: document.getElementById('material-unit').value,
+                    price: parseFloat(document.getElementById('material-price').value),
+                    location: document.getElementById('material-location').value,
+                    supplier: document.getElementById('material-supplier').value,
                 };
-                const appId = "greenecogenius";
+                
+                // Validation simple
+                if (!newMaterial.name || !newMaterial.location || !newMaterial.supplier || isNaN(newMaterial.quantity) || isNaN(newMaterial.price)) {
+                     formErrorMessage.textContent = 'Veuillez remplir tous les champs correctement.';
+                    return;
+                }
 
+                try {
+                    const materialsCollectionPath = `/artifacts/${appId}/public/data/materials`;
+                    const materialsCol = collection(db, materialsCollectionPath);
+                    await addDoc(materialsCol, newMaterial);
+                    
+                    addMaterialForm.reset(); // Vider le formulaire
+                    closeModal(); // Fermer la modale après succès
+                } catch (error) {
+                    console.error("Erreur lors de l'ajout du document: ", error);
+                    formErrorMessage.textContent = 'Une erreur est survenue. Veuillez réessayer.';
+                }
+            }
+
+            addMaterialForm.addEventListener('submit', addMaterialToFirestore);
+
+
+            // --- Initialisation de Firebase et de l'app ---
+            async function initializeAppLogic() {
+                const firebaseConfig = { /* Vos clés Firebase ici */ };
                 const app = initializeApp(firebaseConfig);
-                const db = getFirestore(app);
+                db = getFirestore(app); // Initialise la variable db globale
                 const auth = getAuth(app);
                 setLogLevel('debug');
                 
                 initializeChart();
 
                 onAuthStateChanged(auth, (user) => {
-                    const materialsCollectionPath = `/artifacts/${appId}/public/data/materials`;
-                    const materialsCol = collection(db, materialsCollectionPath);
+                    if (user) { // Si l'utilisateur est connecté (même anonymement)
+                        const materialsCollectionPath = `/artifacts/${appId}/public/data/materials`;
+                        const materialsCol = collection(db, materialsCollectionPath);
                         
-                    onSnapshot(materialsCol, (snapshot) => {
-                        allMaterials = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                        if(loadingIndicator) loadingIndicator.style.display = 'none';
-                        filterAndSearch();
-                        updateChart(allMaterials);
-                    }, (error) => {
-                        console.error("Erreur de lecture de la base de données: ", error);
-                        if(loadingIndicator) loadingIndicator.innerHTML = '<p class="text-center col-span-full text-red-400">Erreur de connexion à la base de données.</p>';
-                    });
-
-                    if (!user) {
-                        signInAnonymously(auth).catch(error => {
-                             console.error("Erreur de connexion anonyme:", error);
-                             if(loadingIndicator) loadingIndicator.innerHTML = '<p class="text-center col-span-full text-red-400">Le service est momentanément indisponible.</p>';
+                        onSnapshot(materialsCol, (snapshot) => {
+                            allMaterials = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                            if(loadingIndicator) loadingIndicator.style.display = 'none';
+                            filterAndSearch();
+                            updateChart(allMaterials);
+                        }, (error) => {
+                            console.error("Erreur de lecture de la base de données: ", error);
+                            if(loadingIndicator) loadingIndicator.innerHTML = '<p class="text-center col-span-full text-red-400">Erreur de connexion à la base de données.</p>';
+                        });
+                    } else { // Si aucun utilisateur, on le connecte anonymement
+                         signInAnonymously(auth).catch(error => {
+                            console.error("Erreur de connexion anonyme:", error);
+                            if(loadingIndicator) loadingIndicator.innerHTML = '<p class="text-center col-span-full text-red-400">Le service est momentanément indisponible.</p>';
                         });
                     }
                 });
