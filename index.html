@@ -36,7 +36,6 @@
         #le-comptoir-app {
             min-height: 100vh;
         }
-        /* On retire la couleur forcée sur les inputs/selects ici car on va la gérer plus spécifiquement */
         #le-comptoir-app p, #le-comptoir-app div, #le-comptoir-app span, #le-comptoir-app li {
             color: var(--color-text);
         }
@@ -75,6 +74,10 @@
             background-color: var(--color-dark-bg);
             color: var(--color-text-white);
         }
+        /* --- CORRECTION FINALE POUR LE TEXTE DU BOUTON --- */
+        .btn-primary-text {
+            color: var(--color-dark-bg) !important;
+        }
     </style>
 </head>
 <body id="le-comptoir-app" class="relative">
@@ -86,7 +89,6 @@
                 <h1 class="text-2xl font-bold">Le Comptoir Circulaire</h1>
                 <p class="text-sm">Par GreenEcoGenius</p>
             </div>
-            <!-- Bouton corrigé pour ouvrir la modale -->
             <button id="open-modal-btn" class="bg-[var(--color-primary)] text-[var(--color-dark-bg)] font-bold py-2 px-6 rounded-full hover:bg-[var(--color-primary-darker)] transition duration-300">
                 <i class="fas fa-plus-circle mr-2"></i>Vendre un lot
             </button>
@@ -179,9 +181,9 @@
                     </div>
                 </div>
                 <div class="mt-8 flex justify-end">
-                    <button id="submit-material-btn" type="submit" class="bg-[var(--color-primary)] text-[var(--color-dark-bg)] font-bold py-3 px-8 rounded-full hover:bg-[var(--color-primary-darker)] transition duration-300 w-48 text-center">
-                        <span class="btn-text">Mettre en vente</span>
-                        <span class="btn-spinner hidden"><i class="fas fa-spinner fa-spin"></i></span>
+                    <button id="submit-material-btn" type="submit" class="bg-[var(--color-primary)] font-bold py-3 px-8 rounded-full hover:bg-[var(--color-primary-darker)] transition duration-300 w-48 text-center">
+                        <span class="btn-text btn-primary-text">Mettre en vente</span>
+                        <span class="btn-spinner hidden btn-primary-text"><i class="fas fa-spinner fa-spin"></i></span>
                     </button>
                 </div>
                  <p id="form-error-message" class="text-red-400 mt-4 text-right"></p>
@@ -359,18 +361,16 @@
 
             // --- Initialisation de Firebase et de l'app ---
             async function initializeAppLogic() {
-                // =======================================================================
-                // IMPORTANT: REMPLACEZ CE BLOC PAR VOTRE CONFIGURATION FIREBASE
-                // =======================================================================
+                // Configuration Firebase insérée directement
                 const firebaseConfig = {
-                    apiKey: "VOTRE_API_KEY",
-                    authDomain: "VOTRE_AUTH_DOMAIN",
-                    projectId: "VOTRE_PROJECT_ID",
-                    storageBucket: "VOTRE_STORAGE_BUCKET",
-                    messagingSenderId: "VOTRE_MESSAGING_SENDER_ID",
-                    appId: "VOTRE_APP_ID"
+                  apiKey: "AIzaSyB0tQRqJaOgqIi7Sbk0v1JPJZbSabzMmBo",
+                  authDomain: "greenecogenius.firebaseapp.com",
+                  projectId: "greenecogenius",
+                  storageBucket: "greenecogenius.firebasestorage.app",
+                  messagingSenderId: "201115761499",
+                  appId: "1:201115761499:web:87f9961ff40f8a5e04387e",
+                  measurementId: "G-LNSR09QLWD"
                 };
-                // =======================================================================
 
                 const app = initializeApp(firebaseConfig);
                 db = getFirestore(app); 
