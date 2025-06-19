@@ -73,8 +73,8 @@
             </div>
             <!-- Boutons qui changent en fonction de l'état de connexion -->
             <div id="auth-container" class="flex items-center gap-4">
-                <!-- État déconnecté -->
-                <div id="logged-out-view" class="hidden">
+                <!-- État déconnecté (visible par défaut, masqué par JS) -->
+                <div id="logged-out-view">
                     <button id="open-login-modal-btn" class="font-semibold hover:text-white transition duration-300">Connexion</button>
                     <button id="open-register-modal-btn" class="bg-[var(--color-primary)] text-[var(--color-dark-bg)] font-bold py-2 px-6 rounded-full hover:bg-[var(--color-primary-darker)] transition duration-300">Inscription</button>
                 </div>
@@ -122,7 +122,7 @@
             <div class="w-full lg:w-2/3">
                 <h2 class="text-xl font-semibold mb-4">Stock disponible en temps réel</h2>
                 <div id="materials-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6 min-h-[300px]">
-                    <p id="loading-indicator" class="col-span-full text-center">Connexion à la base de données...</p>
+                    <p id="loading-indicator" class="col-span-full text-center">Veuillez vous connecter pour voir les lots...</p>
                 </div>
             </div>
             <aside class="w-full lg:w-1/3">
@@ -236,6 +236,7 @@
             let allMaterials = [];
             let currentUser = null;
             let currentUserData = {};
+            let materialsListener = null; // Variable pour garder une référence au listener
             
             const ui = {
                 loggedOutView: document.getElementById('logged-out-view'),
@@ -245,22 +246,42 @@
                 loadingIndicator: document.getElementById('loading-indicator'),
                 
                 update: async (user) => {
+                    // Détacher l'ancien listener s'il existe pour éviter les écoutes multiples
+                    if (materialsListener) {
+                        materialsListener(); // onSnapshot retourne une fonction pour se désinscrire
+                    }
+
                     if (user) {
                         currentUser = user;
                         const userDoc = await getDoc(doc(db, 'users', user.uid));
                         if(userDoc.exists()) {
                             currentUserData = userDoc.data();
-                            ui.accountMenuBtn.textContent = (currentUserData.name || currentUserData.email)[0];
+                            ui.accountMenuBtn.textContent = (currentUserData.name || currentUserData.email)[0].toUpperCase();
                         }
                         ui.loggedOutView.classList.add('hidden');
                         ui.loggedInView.classList.remove('hidden');
+
+                        // Attacher le listener pour les matériaux maintenant qu'on est connecté
+                        const materialsCol = collection(db, 'materials');
+                        materialsListener = onSnapshot(materialsCol, snapshot => {
+                            allMaterials = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+                            ui.loadingIndicator.style.display = 'none';
+                            displayMaterials();
+                        }, error => {
+                            ui.loadingIndicator.textContent = 'Erreur de lecture des données.';
+                            console.error(error);
+                        });
+
                     } else {
                         currentUser = null;
                         currentUserData = {};
+                        allMaterials = []; // Vider les matériaux si déconnecté
                         ui.loggedOutView.classList.remove('hidden');
                         ui.loggedInView.classList.add('hidden');
+                        ui.loadingIndicator.style.display = '';
+                        ui.loadingIndicator.textContent = "Veuillez vous connecter pour voir les lots.";
+                        displayMaterials();
                     }
-                    displayMaterials();
                 }
             };
             
@@ -268,14 +289,22 @@
                 const search = document.getElementById('search-input').value.toLowerCase();
                 const category = document.getElementById('category-filter').value;
                 const country = document.getElementById('country-filter').value;
+                
+                ui.grid.innerHTML = ''; // Toujours vider la grille
+                
+                // Si déconnecté, ne rien afficher
+                if (!currentUser) {
+                    return;
+                }
+
                 const filtered = allMaterials.filter(material => {
                     const countryMatch = country === 'all' || (material.location || '').toLowerCase().includes(country.toLowerCase());
                     const categoryMatch = category === 'all' || material.category === category;
                     const searchMatch = search === '' || (material.name || '').toLowerCase().includes(search) || (material.supplierName || '').toLowerCase().includes(search);
                     return countryMatch && categoryMatch && searchMatch;
                 });
-                ui.grid.innerHTML = '';
-                if(filtered.length === 0 && ui.loadingIndicator.style.display === 'none') {
+                
+                if(filtered.length === 0) {
                     ui.grid.innerHTML = `<p class="col-span-full text-center">Aucun matériau ne correspond à votre recherche.</p>`;
                     return;
                 }
@@ -283,10 +312,8 @@
                     const card = document.createElement('div');
                     card.className = 'bg-[var(--color-card-bg)] rounded-lg shadow-lg overflow-hidden flex flex-col justify-between transform hover:-translate-y-2 transition duration-300 fade-in';
                     const isOwner = currentUser && material.sellerId === currentUser.uid;
-                    let actionButtonHTML = `<div class="p-4 bg-[var(--color-dark-bg)]"><button class="bg-gray-500 text-white font-bold py-2 px-4 rounded-full w-full cursor-not-allowed" disabled>Connectez-vous pour acheter</button></div>`;
-                    if (currentUser && !isOwner) {
-                         actionButtonHTML = `<div class="p-4 bg-[var(--color-dark-bg)]"><button data-buy-id="${material.id}" class="bg-[var(--color-primary)] btn-primary-text font-bold py-2 px-4 rounded-full w-full">Acheter ce lot</button></div>`;
-                    } else if (isOwner) {
+                    let actionButtonHTML = `<div class="p-4 bg-[var(--color-dark-bg)]"><button data-buy-id="${material.id}" class="bg-[var(--color-primary)] btn-primary-text font-bold py-2 px-4 rounded-full w-full">Acheter ce lot</button></div>`;
+                    if (isOwner) {
                          actionButtonHTML = `<div class="p-4 bg-[var(--color-dark-bg)]"><div class="tag-own text-center font-bold py-2 px-4 rounded-full w-full">Votre lot</div></div>`;
                     }
                     card.innerHTML = `
@@ -308,15 +335,8 @@
                 });
             }
 
+            // --- LISTENERS ---
             onAuthStateChanged(auth, ui.update);
-            const materialsCol = collection(db, 'materials');
-            onSnapshot(materialsCol, snapshot => {
-                allMaterials = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                ui.loadingIndicator.style.display = 'none';
-                displayMaterials();
-            }, error => {
-                ui.loadingIndicator.textContent = 'Erreur de connexion à la base de données.';
-            });
             
             document.addEventListener('click', e => {
                 const target = e.target;
@@ -341,6 +361,7 @@
             document.getElementById('category-filter').addEventListener('change', displayMaterials);
             document.getElementById('country-filter').addEventListener('change', displayMaterials);
             
+            // --- FORM SUBMISSIONS ---
             document.getElementById('register-form').addEventListener('submit', async e => {
                 e.preventDefault();
                 const name = e.target['register-name'].value;
@@ -396,20 +417,26 @@
 
             async function openAccountModal() {
                 const accountModal = document.getElementById('account-modal');
-                let salesHTML = '<div>Aucune vente en cours.</div>';
-                let purchasesHTML = '<div>Aucun achat.</div>';
+                let salesHTML = '<div class="p-2">Aucune vente en cours.</div>';
+                let purchasesHTML = '<div class="p-2">Aucun achat.</div>';
                 
                 const salesQuery = query(collection(db, "materials"), where("sellerId", "==", currentUser.uid));
                 const salesSnapshot = await getDocs(salesQuery);
-                if(!salesSnapshot.empty) {
-                    salesHTML = salesSnapshot.docs.map(d => `<div class="p-2 bg-gray-700 rounded">${d.data().name} - ${d.data().quantity} ${d.data().unit}</div>`).join('');
-                }
+if(!salesSnapshot.empty) {
+    salesHTML = salesSnapshot.docs.map(d => {
+        const data = d.data();
+        return `<div class="p-3 bg-[var(--color-dark-bg)] rounded-lg flex justify-between items-center"><span>${data.name} - ${data.quantity} ${data.unit}</span><span class="font-bold text-[var(--color-primary)]">${new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(data.price)}</span></div>`
+    }).join('');
+}
 
                 const purchasesQuery = query(collection(db, "purchases"), where("buyerId", "==", currentUser.uid));
                 const purchasesSnapshot = await getDocs(purchasesQuery);
-                if(!purchasesSnapshot.empty) {
-                    purchasesHTML = purchasesSnapshot.docs.map(d => `<div class="p-2 bg-gray-700 rounded">${d.data().name} - ${new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(d.data().price)}</div>`).join('');
-                }
+if(!purchasesSnapshot.empty) {
+    purchasesHTML = purchasesSnapshot.docs.map(d => {
+        const data = d.data();
+        return `<div class="p-3 bg-[var(--color-dark-bg)] rounded-lg flex justify-between items-center"><span>${data.name} (vendu par ${data.supplierName})</span><span class="font-bold text-[var(--color-primary)]">${new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(data.price)}</span></div>`
+    }).join('');
+}
                 
                 accountModal.innerHTML = `
                     <div class="bg-[var(--color-secondary-bg)] rounded-lg shadow-2xl p-8 w-full max-w-3xl modal-content max-h-[80vh] overflow-y-auto">
@@ -418,8 +445,8 @@
                             <button data-close-modal="account-modal" class="text-gray-400 hover:text-white text-2xl">&times;</button>
                         </div>
                         <div class="space-y-6">
-                            <div><h3 class="font-bold text-lg mb-2">Mes Ventes</h3><div class="space-y-2">${salesHTML}</div></div>
-                            <div><h3 class="font-bold text-lg mb-2">Mes Achats</h3><div class="space-y-2">${purchasesHTML}</div></div>
+                            <div><h3 class="font-bold text-xl mb-2 border-b border-gray-600 pb-2">Mes Ventes</h3><div class="space-y-2">${salesHTML}</div></div>
+                            <div><h3 class="font-bold text-xl mb-2 border-b border-gray-600 pb-2">Mes Achats</h3><div class="space-y-2">${purchasesHTML}</div></div>
                         </div>
                     </div>`;
                 accountModal.classList.remove('hidden');
@@ -428,3 +455,4 @@
     </script>
 </body>
 </html>
+
