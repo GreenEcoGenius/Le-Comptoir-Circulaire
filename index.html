@@ -26,194 +26,131 @@
             --color-text-white: #ffffff;
             --color-primary: #5affb5; 
             --color-primary-darker: #49db9f;
-            --color-danger: #ff5a5a;
             --font-main: 'Poppins', sans-serif;
         }
-        body {
+        #le-comptoir-app {
             font-family: var(--font-main);
             background-color: var(--color-dark-bg);
             color: var(--color-text);
+            min-height: 100vh;
         }
-        #le-comptoir-app h1, #le-comptoir-app h2, #le-comptoir-app h3, #le-comptoir-app h4, #le-comptoir-app label { color: var(--color-text-white) !important; }
+        #le-comptoir-app p, #le-comptoir-app div, #le-comptoir-app span, #le-comptoir-app li {
+            color: var(--color-text) !important;
+        }
+        #le-comptoir-app h1, #le-comptoir-app h2, #le-comptoir-app h3, #le-comptoir-app h4, #le-comptoir-app label {
+            color: var(--color-text-white) !important;
+        }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--color-secondary-bg); }
+        ::-webkit-scrollbar-thumb { background: var(--color-primary); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--color-primary-darker); }
+
         .tag { background-color: var(--color-secondary-bg); color: var(--color-primary) !important; }
-        .tag-own { background-color: var(--color-primary); color: var(--color-dark-bg) !important; }
         .fade-in { animation: fadeIn 0.5s ease-in-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .modal-backdrop { animation: fadeIn 0.3s ease-in-out; }
-        .modal-content { animation: slideInUp 0.4s ease-in-out; }
-        @keyframes slideInUp { from { opacity: 0; transform: translateY(50px); } to { opacity: 1; transform: translateY(0); } }
-        .form-input, .form-select { background-color: var(--color-dark-bg) !important; color: var(--color-text-white) !important; border: 1px solid var(--color-secondary-bg); }
-        .form-select option { background-color: var(--color-dark-bg); color: var(--color-text-white); }
-        .btn-primary-text { color: var(--color-dark-bg) !important; }
-        .btn-danger { background-color: var(--color-danger); color: white; }
     </style>
 </head>
-<body id="le-comptoir-app" class="relative">
+<body id="le-comptoir-app">
 
-    <header class="bg-[var(--color-secondary-bg)] shadow-lg sticky top-0 z-40">
+    <!-- En-tête de l'application -->
+    <header class="bg-secondary-bg shadow-lg">
         <div class="container mx-auto px-6 py-4 flex justify-between items-center">
             <div>
-                <h1 class="text-2xl font-bold">Le Comptoir Circulaire</h1>
+                <h1 class="text-2xl font-bold text-white">Le Comptoir Circulaire</h1>
                 <p class="text-sm">Par GreenEcoGenius</p>
             </div>
-            <div id="auth-container" class="flex items-center gap-4">
-                <div id="logged-out-view">
-                    <button id="open-login-modal-btn" class="font-semibold hover:text-white transition duration-300">Connexion</button>
-                    <button id="open-register-modal-btn" class="bg-[var(--color-primary)] text-[var(--color-dark-bg)] font-bold py-2 px-6 rounded-full hover:bg-[var(--color-primary-darker)] transition duration-300">Inscription</button>
-                </div>
-                <div id="logged-in-view" class="hidden flex items-center gap-4">
-                    <button id="open-sell-modal-btn" class="bg-[var(--color-primary)] text-[var(--color-dark-bg)] font-bold py-2 px-6 rounded-full hover:bg-[var(--color-primary-darker)] transition duration-300"><i class="fas fa-plus-circle mr-2"></i>Vendre un lot</button>
-                    <div class="relative dropdown">
-                        <button id="account-menu-btn" class="w-10 h-10 bg-[var(--color-dark-bg)] rounded-full flex items-center justify-center text-xl font-bold text-white uppercase"></button>
-                        <div id="account-dropdown-menu" class="dropdown-menu absolute right-0 mt-2 w-48 bg-[var(--color-secondary-bg)] rounded-md shadow-xl z-20 hidden">
-                            <a href="#" id="open-account-btn" class="block px-4 py-2 text-sm text-white hover:bg-[var(--color-card-bg)]">Mon Compte</a>
-                            <a href="#" id="logout-btn" class="block px-4 py-2 text-sm text-white hover:bg-[var(--color-card-bg)]">Déconnexion</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <a href="login.html" class="bg-primary text-dark-bg font-bold py-2 px-6 rounded-full hover:bg-primary-darker transition duration-300">
+                <i class="fas fa-plus-circle mr-2"></i>Vendre un lot
+            </a>
         </div>
     </header>
 
+    <!-- Corps principal de l'application -->
     <main class="container mx-auto px-6 py-8">
-        <div class="bg-[var(--color-secondary-bg)] p-6 rounded-lg shadow-xl mb-8">
-             <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                <div class="md:col-span-2 lg:col-span-2"><label for="search-input" class="block mb-2 text-sm font-medium">Rechercher un matériau</label><div class="relative"><span class="absolute inset-y-0 left-0 flex items-center pl-3"><i class="fas fa-search text-gray-400"></i></span><input type="text" id="search-input" class="form-input w-full rounded-lg py-2 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]" placeholder="Ex: Plastique HDPE, Cuivre..."></div></div>
-                <div><label for="category-filter" class="block mb-2 text-sm font-medium">Catégorie</label><select id="category-filter" class="form-select w-full rounded-lg py-2 px-3 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"><option value="all">Toutes</option><option value="Plastiques">Plastiques</option><option value="Métaux">Métaux</option><option value="Papiers/Cartons">Papiers/Cartons</option><option value="Verre">Verre</option><option value="Bois">Bois</option></select></div>
-                <div><label for="country-filter" class="block mb-2 text-sm font-medium">Pays</label><select id="country-filter" class="form-select w-full rounded-lg py-2 px-3 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"><option value="all">Tous</option><option value="France">France</option><option value="Allemagne">Allemagne</option><option value="Italie">Italie</option><option value="Espagne">Espagne</option></select></div>
+        <!-- Barre de filtres et de recherche -->
+        <div class="bg-secondary-bg p-6 rounded-lg shadow-xl mb-8">
+            <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                <div class="md:col-span-2 lg:col-span-2">
+                    <label for="search-input" class="block mb-2 text-sm font-medium">Rechercher un matériau</label>
+                    <div class="relative"><span class="absolute inset-y-0 left-0 flex items-center pl-3"><i class="fas fa-search text-gray-400"></i></span><input type="text" id="search-input" class="w-full bg-dark-bg border border-secondary-bg rounded-lg py-2 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Ex: Plastique HDPE, Cuivre..."></div>
+                </div>
+                <div>
+                    <label for="category-filter" class="block mb-2 text-sm font-medium">Catégorie</label>
+                    <select id="category-filter" class="w-full bg-dark-bg border border-secondary-bg rounded-lg py-2 px-3 focus:outline-none focus:ring-2 focus:ring-primary">
+                        <option value="all">Toutes les catégories</option><option value="Plastiques">Plastiques</option><option value="Métaux">Métaux</option><option value="Papiers/Cartons">Papiers/Cartons</option><option value="Verre">Verre</option><option value="Bois">Bois</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="country-filter" class="block mb-2 text-sm font-medium">Pays</label>
+                    <select id="country-filter" class="w-full bg-dark-bg border border-secondary-bg rounded-lg py-2 px-3 focus:outline-none focus:ring-2 focus:ring-primary">
+                        <option value="all">Toute l'Europe</option><option value="France">France</option><option value="Allemagne">Allemagne</option><option value="Italie">Italie</option><option value="Espagne">Espagne</option>
+                    </select>
+                </div>
             </div>
         </div>
+
+        <!-- Section de contenu principal -->
         <div class="flex flex-col lg:flex-row gap-8">
-            <div class="w-full lg:w-2/3"><h2 class="text-xl font-semibold mb-4">Stock disponible en temps réel</h2><div id="materials-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6 min-h-[300px]"><p id="loading-indicator" class="col-span-full text-center">Chargement des lots...</p></div></div>
-            <aside class="w-full lg:w-1/3"><div class="bg-[var(--color-secondary-bg)] p-6 rounded-lg shadow-xl sticky top-8"><h3 class="text-xl font-semibold mb-4">Aperçu du Marché</h3><div><canvas id="volumeChart"></canvas></div></div></aside>
+            <!-- Colonne principale : Grille des matériaux -->
+            <div class="w-full lg:w-2/3">
+                <h2 class="text-xl font-semibold mb-4 text-white">Stock disponible en temps réel</h2>
+                <div id="materials-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6 min-h-[300px]">
+                    <p id="loading-indicator" class="col-span-full text-center">Connexion à la base de données...</p>
+                </div>
+            </div>
+            <!-- Colonne latérale : Statistiques -->
+            <aside class="w-full lg:w-1/3">
+                <div class="bg-secondary-bg p-6 rounded-lg shadow-xl sticky top-8">
+                    <h3 class="text-xl font-semibold mb-4 text-white">Aperçu du Marché</h3>
+                    <div><canvas id="volumeChart"></canvas></div>
+                </div>
+            </aside>
         </div>
     </main>
-
-    <!-- Modales -->
-    <div id="sell-material-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 z-50 flex justify-center items-center p-4 modal-backdrop">
-         <div class="bg-[var(--color-secondary-bg)] rounded-lg shadow-2xl p-8 w-full max-w-2xl modal-content"><div class="flex justify-between items-center mb-6"><h2 class="text-2xl font-bold">Vendre un nouveau lot</h2><button data-close-modal="sell-material-modal" class="text-gray-400 hover:text-white text-2xl">&times;</button></div><form id="add-material-form" class="space-y-4"><div class="grid grid-cols-1 md:grid-cols-2 gap-4"><div><label for="material-name" class="block mb-2 text-sm">Nom du matériau</label><input type="text" id="material-name" placeholder="Ex: PET Recyclé" required class="form-input w-full rounded-lg p-2"></div><div><label for="material-category" class="block mb-2 text-sm">Catégorie</label><select id="material-category" required class="form-select w-full rounded-lg p-2"><option value="Plastiques">Plastiques</option><option value="Métaux">Métaux</option><option value="Papiers/Cartons">Papiers/Cartons</option><option value="Verre">Verre</option><option value="Bois">Bois</option></select></div><div><label for="material-quantity" class="block mb-2 text-sm">Quantité</label><input type="number" step="0.01" id="material-quantity" placeholder="10.5" required class="form-input w-full rounded-lg p-2"></div><div><label for="material-unit" class="block mb-2 text-sm">Unité</label><select id="material-unit" required class="form-select w-full rounded-lg p-2"><option value="tonnes">tonnes</option><option value="kg">kg</option><option value="m³">m³</option></select></div><div><label for="material-price" class="block mb-2 text-sm">Prix par unité (€)</label><input type="number" step="0.01" id="material-price" placeholder="550.00" required class="form-input w-full rounded-lg p-2"></div><div><label for="material-location" class="block mb-2 text-sm">Localisation</label><input type="text" id="material-location" placeholder="Lyon, France" required class="form-input w-full rounded-lg p-2"></div></div><div class="mt-8 flex justify-end"><button id="submit-material-btn" type="submit" class="bg-[var(--color-primary)] font-bold py-3 px-8 rounded-full hover:bg-[var(--color-primary-darker)] transition duration-300 w-48 text-center"><span class="btn-text btn-primary-text">Mettre en vente</span><span class="btn-spinner hidden btn-primary-text"><i class="fas fa-spinner fa-spin"></i></span></button></div><p id="sell-form-error" class="text-red-400 mt-4 text-right"></p></form></div>
-    </div>
-    <div id="login-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 z-50 flex justify-center items-center p-4 modal-backdrop">
-        <div class="bg-[var(--color-secondary-bg)] rounded-lg shadow-2xl p-8 w-full max-w-md modal-content"><div class="flex justify-between items-center mb-6"><h2 class="text-2xl font-bold">Connexion</h2><button data-close-modal="login-modal" class="text-gray-400 hover:text-white text-2xl">&times;</button></div><form id="login-form"><div class="space-y-4"><div><label for="login-email" class="block mb-2 text-sm">Email</label><input type="email" id="login-email" required class="form-input w-full rounded-lg p-2"></div><div><label for="login-password" class="block mb-2 text-sm">Mot de passe</label><input type="password" id="login-password" required class="form-input w-full rounded-lg p-2"></div></div><div class="mt-8 flex justify-end"><button type="submit" class="bg-[var(--color-primary)] btn-primary-text font-bold py-3 px-8 rounded-full w-full">Se connecter</button></div><p id="login-error" class="text-red-400 mt-4 text-center"></p></form></div>
-    </div>
-    <div id="register-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 z-50 flex justify-center items-center p-4 modal-backdrop">
-         <div class="bg-[var(--color-secondary-bg)] rounded-lg shadow-2xl p-8 w-full max-w-md modal-content"><div class="flex justify-between items-center mb-6"><h2 class="text-2xl font-bold">Créer un compte</h2><button data-close-modal="register-modal" class="text-gray-400 hover:text-white text-2xl">&times;</button></div><form id="register-form"><div class="space-y-4"><div><label for="register-name" class="block mb-2 text-sm">Nom ou Entreprise</label><input type="text" id="register-name" required class="form-input w-full rounded-lg p-2"></div><div><label for="register-email" class="block mb-2 text-sm">Email</label><input type="email" id="register-email" required class="form-input w-full rounded-lg p-2"></div><div><label for="register-password" class="block mb-2 text-sm">Mot de passe (6 caractères min.)</label><input type="password" id="register-password" required class="form-input w-full rounded-lg p-2"></div></div><div class="mt-8 flex justify-end"><button type="submit" class="bg-[var(--color-primary)] btn-primary-text font-bold py-3 px-8 rounded-full w-full">S'inscrire</button></div><p id="register-error" class="text-red-400 mt-4 text-center"></p></form></div>
-    </div>
-    <div id="account-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 z-50 flex justify-center items-center p-4 modal-backdrop"></div>
-    <div id="buy-confirmation-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 z-50 flex justify-center items-center p-4 modal-backdrop">
-        <div class="bg-[var(--color-secondary-bg)] rounded-lg shadow-2xl p-8 w-full max-w-md modal-content text-center"><h2 class="text-2xl font-bold mb-4">Confirmer l'achat</h2><p id="buy-confirmation-text" class="mb-6">Êtes-vous sûr de vouloir acheter ce lot ?</p><div class="flex justify-center gap-4"><button data-close-modal="buy-confirmation-modal" class="bg-gray-500 text-white font-bold py-2 px-6 rounded-full">Annuler</button><button id="confirm-buy-btn" class="btn-danger font-bold py-2 px-6 rounded-full">Confirmer</button></div></div>
-    </div>
 
     <!-- Scripts Firebase -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getFirestore, collection, onSnapshot, addDoc, doc, getDoc, writeBatch, setDoc, query, where, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, onSnapshot, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
         document.addEventListener('DOMContentLoaded', function() {
-            const firebaseConfig = {
-              apiKey: "AIzaSyB0tQRqJaOgqIi7Sbk0v1JPJZbSabzMmBo",
-              authDomain: "greenecogenius.firebaseapp.com",
-              projectId: "greenecogenius",
-              storageBucket: "greenecogenius.firebasestorage.app",
-              messagingSenderId: "201115761499",
-              appId: "1:201115761499:web:87f9961ff40f8a5e04387e",
-              measurementId: "G-LNSR09QLWD"
-            };
-
-            const app = initializeApp(firebaseConfig);
-            const db = getFirestore(app);
-            const auth = getAuth(app);
-            const appId = "greenecogenius";
-            
             let allMaterials = [];
-            let currentUser = null;
-            let currentUserData = {};
+            let volumeChart;
             
-            // --- AJOUT : Facteurs d'émission de CO2 ---
             const co2Factors = {
                 "Plastiques": 2100, "Métaux": 6500, "Papiers/Cartons": 800,
                 "Verre": 400, "Bois": 50
             };
 
-            // --- UI Management ---
-            const ui = {
-                loggedOutView: document.getElementById('logged-out-view'),
-                loggedInView: document.getElementById('logged-in-view'),
-                accountMenuBtn: document.getElementById('account-menu-btn'),
-                grid: document.getElementById('materials-grid'),
-                loadingIndicator: document.getElementById('loading-indicator'),
-                
-                update: async (user) => {
-                    if (user) {
-                        currentUser = user;
-                        const userRef = doc(db, 'artifacts', appId, 'users', user.uid);
-                        const userDoc = await getDoc(userRef);
-                        if(userDoc.exists()) {
-                            currentUserData = userDoc.data();
-                            const name = currentUserData.name || currentUserData.email || '';
-                            ui.accountMenuBtn.textContent = name ? name[0].toUpperCase() : '?';
-                        }
-                        ui.loggedOutView.classList.add('hidden');
-                        ui.loggedInView.classList.remove('hidden');
-                    } else {
-                        currentUser = null; currentUserData = {};
-                        ui.loggedOutView.classList.remove('hidden'); ui.loggedInView.classList.add('hidden');
-                    }
-                    displayMaterials();
-                }
-            };
-            
-            // --- Data Display ---
-            function displayMaterials() {
-                const search = document.getElementById('search-input').value.toLowerCase();
-                const category = document.getElementById('category-filter').value;
-                const country = document.getElementById('country-filter').value;
-                
-                ui.grid.innerHTML = ''; 
-                const filtered = allMaterials.filter(material => {
-                    const countryMatch = country === 'all' || (material.location || '').toLowerCase().includes(country.toLowerCase());
-                    const categoryMatch = category === 'all' || material.category === category;
-                    const supplierInfo = material.supplierName || material.supplier || '';
-                    const searchMatch = search === '' || (material.name || '').toLowerCase().includes(search) || supplierInfo.toLowerCase().includes(search);
-                    return countryMatch && categoryMatch && searchMatch;
-                });
-                if(filtered.length === 0) {
-                    ui.loadingIndicator.style.display = 'block';
-                    ui.loadingIndicator.textContent = 'Aucun matériau ne correspond à votre recherche.';
+            const grid = document.getElementById('materials-grid');
+            const searchInput = document.getElementById('search-input');
+            const categoryFilter = document.getElementById('category-filter');
+            const countryFilter = document.getElementById('country-filter');
+            const loadingIndicator = document.getElementById('loading-indicator');
+            const chartCanvas = document.getElementById('volumeChart');
+
+            function displayMaterials(filteredMaterials) {
+                if (!grid || !loadingIndicator) return;
+                grid.innerHTML = '';
+                if (filteredMaterials.length === 0 && loadingIndicator.style.display === 'none') {
+                    grid.innerHTML = '<p class="text-center col-span-full">Aucun matériau trouvé. Soyez le premier à ajouter un lot !</p>';
                     return;
                 }
-                ui.loadingIndicator.style.display = 'none';
-
-                filtered.forEach(material => {
-                    const card = document.createElement('div');
-                    card.className = 'bg-[var(--color-card-bg)] rounded-lg shadow-lg overflow-hidden flex flex-col justify-between transform hover:-translate-y-2 transition duration-300 fade-in';
-                    const isOwner = currentUser && material.sellerId === currentUser.uid;
-                    const supplierInfo = material.supplierName || material.supplier || 'N/A';
-                    
-                    // --- AJOUT : Calcul de l'économie de CO2 ---
+                filteredMaterials.forEach(material => {
                     const factor = co2Factors[material.category] || 0;
                     const quantityInTons = material.unit === 'tonnes' ? (material.quantity || 0) : (material.quantity || 0) / 1000;
                     const co2Saved = (factor * quantityInTons).toFixed(0);
 
-                    let actionButtonHTML = `<div class="p-4 bg-[var(--color-dark-bg)]"><button class="bg-gray-500 text-white font-bold py-2 px-4 rounded-full w-full cursor-not-allowed" disabled>Connectez-vous pour acheter</button></div>`;
-                    if (currentUser) {
-                        if (isOwner) {
-                            actionButtonHTML = `<div class="p-4 bg-[var(--color-dark-bg)]"><div class="tag-own text-center font-bold py-2 px-4 rounded-full w-full">Votre lot</div></div>`;
-                        } else {
-                            actionButtonHTML = `<div class="p-4 bg-[var(--color-dark-bg)]"><button data-buy-id="${material.id}" class="bg-[var(--color-primary)] btn-primary-text font-bold py-2 px-4 rounded-full w-full">Acheter ce lot</button></div>`;
-                        }
-                    }
-
-                    // --- AJOUT : Affichage de l'empreinte carbone dans le HTML ---
+                    const card = document.createElement('div');
+                    card.className = 'bg-card-bg rounded-lg shadow-lg overflow-hidden flex flex-col justify-between transform hover:-translate-y-2 transition duration-300 fade-in';
                     card.innerHTML = `
                         <div>
                             <img src="https://placehold.co/600x400/112f3b/5affb5?text=${encodeURIComponent(material.category)}" alt="${material.name}" class="w-full h-40 object-cover">
                             <div class="p-5">
                                 <span class="tag text-xs font-semibold py-1 px-3 rounded-full">${material.category}</span>
                                 <h3 class="text-lg font-bold mt-3">${material.name}</h3>
-                                <p class="text-sm mt-2 opacity-80"><i class="fas fa-user mr-2"></i>${supplierInfo}</p>
-                                <p class="text-sm mt-1 opacity-80"><i class="fas fa-map-marker-alt mr-2"></i>${material.location}</p>
+                                <p class="text-sm mt-2 opacity-80"><i class="fas fa-map-marker-alt mr-2"></i>${material.location}</p>
                                 <div class="mt-4 flex justify-between items-center">
                                     <div><p class="text-sm font-semibold">${material.quantity} ${material.unit}</p><p class="text-xs opacity-80">disponibles</p></div>
                                     <div class="text-right"><p class="text-lg font-bold text-[var(--color-primary)]">${new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(material.price || 0)}</p><p class="text-xs opacity-80">par ${material.unit}</p></div>
@@ -224,126 +161,101 @@
                             <p class="text-sm font-semibold text-[var(--color-primary)] flex items-center justify-center">
                                 <i class="fas fa-leaf mr-2"></i>Économie de CO2 estimée : ${co2Saved} kg
                             </p>
-                        </div>
-                        ${actionButtonHTML}`;
-                    ui.grid.appendChild(card);
+                        </div>`;
+                    grid.appendChild(card);
                 });
             }
 
-            // --- Listeners ---
-            const materialsCol = collection(db, 'artifacts', appId, 'public', 'data', 'materials');
-            onSnapshot(materialsCol, snapshot => {
-                allMaterials = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-                displayMaterials();
-                // updateChart(allMaterials); // On peut l'ajouter si besoin
-            }, error => console.error("Erreur de lecture des matériaux: ", error));
+            function filterAndSearch() {
+                if(!searchInput) return;
+                const searchTerm = searchInput.value.toLowerCase();
+                const selectedCategory = categoryFilter.value;
+                const selectedCountry = countryFilter.value;
+                const filtered = allMaterials.filter(material => {
+                    const country = material.location ? material.location.split(',').pop().trim() : '';
+                    const nameMatch = material.name ? material.name.toLowerCase().includes(searchTerm) : false;
+                    const supplierMatch = material.supplier ? material.supplier.toLowerCase().includes(searchTerm) : false;
+                    const matchesSearch = nameMatch || supplierMatch;
+                    const matchesCategory = selectedCategory === 'all' || material.category === selectedCategory;
+                    const matchesCountry = selectedCountry === 'all' || country === selectedCountry;
+                    return matchesSearch && matchesCategory && matchesCountry;
+                });
+                displayMaterials(filtered);
+            }
 
-            onAuthStateChanged(auth, ui.update);
-            
-            document.addEventListener('click', e => {
-                const target = e.target;
-                const dropdownMenu = document.getElementById('account-dropdown-menu');
-                if (target.closest('#account-menu-btn')) { dropdownMenu.classList.toggle('hidden'); } 
-                else if (!target.closest('.dropdown')) { dropdownMenu.classList.add('hidden'); }
-                if(target.closest('[data-close-modal]')) document.getElementById(target.closest('[data-close-modal]').dataset.closeModal).classList.add('hidden');
-                if(target.closest('#open-login-modal-btn')) document.getElementById('login-modal').classList.remove('hidden');
-                if(target.closest('#open-register-modal-btn')) document.getElementById('register-modal').classList.remove('hidden');
-                if(target.closest('#open-sell-modal-btn')) document.getElementById('sell-material-modal').classList.remove('hidden');
-                if(target.closest('#logout-btn')) { signOut(auth); dropdownMenu.classList.add('hidden'); }
-                if(target.closest('#open-account-btn')) { openAccountModal(); dropdownMenu.classList.add('hidden'); }
-                if(target.closest('[data-buy-id]')) {
-                    const materialId = target.closest('[data-buy-id]').dataset.buyId;
-                    const material = allMaterials.find(m => m.id === materialId);
-                    const modal = document.getElementById('buy-confirmation-modal');
-                    modal.querySelector('#buy-confirmation-text').textContent = `Acheter "${material.name}" pour ${new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(material.price || 0)} ?`;
-                    modal.querySelector('#confirm-buy-btn').dataset.materialId = materialId;
-                    modal.classList.remove('hidden');
+            function initializeChart() {
+                if (chartCanvas) {
+                    const ctx = chartCanvas.getContext('2d');
+                    volumeChart = new Chart(ctx, {
+                        type: 'bar',
+                        data: { labels: [], datasets: [{ label: 'Volume de stock (en tonnes)', data: [], backgroundColor: 'rgba(90, 255, 181, 0.6)', borderColor: 'rgba(90, 255, 181, 1)', borderWidth: 1, borderRadius: 5 }] },
+                        options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { color: '#d0e0e3' }, grid: { color: 'rgba(208, 224, 227, 0.1)'}}, x: { ticks: { color: '#d0e0e3' }, grid: { display: false }}}, plugins: { legend: { display: false }}}
+                    });
                 }
-                if(target.closest('#confirm-buy-btn')) buyMaterial(target.closest('#confirm-buy-btn').dataset.materialId);
-            });
-            document.getElementById('search-input').addEventListener('input', displayMaterials);
-            document.getElementById('category-filter').addEventListener('change', displayMaterials);
-            document.getElementById('country-filter').addEventListener('change', displayMaterials);
-            
-            // --- Form Submissions ---
-            document.getElementById('register-form').addEventListener('submit', async e => {
-                e.preventDefault();
-                const name = e.target['register-name'].value; const email = e.target['register-email'].value; const password = e.target['register-password'].value;
-                try {
-                    const cred = await createUserWithEmailAndPassword(auth, email, password);
-                    const userRef = doc(db, 'artifacts', appId, 'users', cred.user.uid);
-                    await setDoc(userRef, { name, email, createdAt: serverTimestamp() });
-                    document.getElementById('register-modal').classList.add('hidden'); e.target.reset();
-                } catch (error) { document.getElementById('register-error').textContent = error.message; }
-            });
-            document.getElementById('login-form').addEventListener('submit', async e => {
-                e.preventDefault();
-                const email = e.target['login-email'].value; const password = e.target['login-password'].value;
-                try {
-                    await signInWithEmailAndPassword(auth, email, password);
-                    document.getElementById('login-modal').classList.add('hidden'); e.target.reset();
-                } catch (error) { document.getElementById('login-error').textContent = "Email ou mot de passe incorrect."; }
-            });
-            document.getElementById('add-material-form').addEventListener('submit', async e => {
-                e.preventDefault(); if(!currentUser) return;
-                const newMaterial = {
-                    name: e.target['material-name'].value, category: e.target['material-category'].value, quantity: parseFloat(e.target['material-quantity'].value), unit: e.target['material-unit'].value, price: parseFloat(e.target['material-price'].value), location: e.target['material-location'].value,
-                    sellerId: currentUser.uid, supplierName: currentUserData.name, createdAt: serverTimestamp() };
-                try {
-                    const materialsColRef = collection(db, 'artifacts', appId, 'public', 'data', 'materials');
-                    await addDoc(materialsColRef, newMaterial);
-                    document.getElementById('sell-material-modal').classList.add('hidden'); e.target.reset();
-                } catch(error) { document.getElementById('sell-form-error').textContent = error.message; }
-            });
-            async function buyMaterial(materialId) {
-                if(!currentUser) return;
-                const materialRef = doc(db, 'artifacts', appId, 'public', 'data', 'materials', materialId);
-                const materialDoc = await getDoc(materialRef);
-                if (!materialDoc.exists()) { console.error("Lot introuvable!"); return; }
-                const batch = writeBatch(db);
-                const purchaseRef = doc(collection(db, 'artifacts', appId, 'public', 'data', 'purchases'));
-                batch.set(purchaseRef, { ...materialDoc.data(), buyerId: currentUser.uid, purchaseDate: serverTimestamp() });
-                batch.delete(materialRef);
-                await batch.commit();
-                document.getElementById('buy-confirmation-modal').classList.add('hidden');
             }
-            async function openAccountModal() {
-                const accountModal = document.getElementById('account-modal');
-                let salesHTML = `<div class="p-2 text-center text-gray-400">Vous n'avez aucun lot en vente.</div>`;
-                let purchasesHTML = `<div class="p-2 text-center text-gray-400">Vous n'avez réalisé aucun achat.</div>`;
-                try {
-                    const salesQuery = query(collection(db, 'artifacts', appId, 'public', 'data', 'materials'), where("sellerId", "==", currentUser.uid));
-                    const salesSnapshot = await getDocs(salesQuery);
-                    if(!salesSnapshot.empty) {
-                        salesHTML = salesSnapshot.docs.map(d => `<div class="p-3 bg-[var(--color-dark-bg)] rounded-lg flex justify-between items-center"><span>${d.data().name} - ${d.data().quantity} ${d.data().unit}</span><span class="font-bold text-[var(--color-primary)]">${new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(d.data().price)}</span></div>`).join('');
+
+            function updateChart(materials) {
+                const volumeByCategory = materials.reduce((acc, material) => {
+                    if (material.unit === 'tonnes') {
+                        acc[material.category] = (acc[material.category] || 0) + parseFloat(material.quantity || 0);
                     }
-                    const purchasesQuery = query(collection(db, 'artifacts', appId, 'public', 'data', 'purchases'), where("buyerId", "==", currentUser.uid));
-                    const purchasesSnapshot = await getDocs(purchasesQuery);
-                    if(!purchasesSnapshot.empty) {
-                        purchasesHTML = purchasesSnapshot.docs.map(d => `<div class="p-3 bg-[var(--color-dark-bg)] rounded-lg flex justify-between items-center"><span>${d.data().name} (vendu par ${d.data().supplierName || d.data().supplier})</span><span class="font-bold text-[var(--color-primary)]">${new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(d.data().price)}</span></div>`).join('');
-                    }
-                } catch (error) {
-                    console.error("Erreur d'index Firestore détectée:", error);
-                    const indexErrorMessage = `
-                        <div class="p-4 bg-yellow-900/50 border border-yellow-700 text-yellow-200 rounded-lg">
-                            <p class="font-bold text-lg text-center">Action requise sur votre base de données</p>
-                            <p class="mt-2">Pour afficher vos ventes et achats, un "index" est nécessaire. Il semble qu'il manque. C'est très simple à créer manuellement :</p>
-                            <ol class="list-decimal list-inside mt-2 space-y-1">
-                                <li>Allez sur votre console Firebase > Firestore Database > onglet Index > Champ individuel.</li>
-                                <li><b>Pour les Ventes:</b> Ajoutez une exception pour la collection <code>materials</code>, champ <code>sellerId</code> (Croissant & Décroissant).</li>
-                                <li><b>Pour les Achats:</b> Ajoutez une exception pour la collection <code>purchases</code>, champ <code>buyerId</code> (Croissant & Décroissant).</li>
-                            </ol>
-                            <p class="mt-2 text-sm">Après la création (quelques minutes), rafraîchissez cette page et ré-ouvrez "Mon Compte".</p>
-                        </div>`;
-                    salesHTML = indexErrorMessage; purchasesHTML = '';
+                    return acc;
+                }, {});
+                if (volumeChart) {
+                    volumeChart.data.labels = Object.keys(volumeByCategory);
+                    volumeChart.data.datasets[0].data = Object.values(volumeByCategory);
+                    volumeChart.update();
                 }
-                accountModal.innerHTML = `
-                    <div class="bg-[var(--color-secondary-bg)] rounded-lg shadow-2xl p-8 w-full max-w-3xl modal-content max-h-[80vh] overflow-y-auto">
-                        <div class="flex justify-between items-center mb-6"><h2 class="text-2xl font-bold">Mon Compte</h2><button data-close-modal="account-modal" class="text-gray-400 hover:text-white text-2xl">&times;</button></div>
-                        <div class="space-y-6"><div><h3 class="font-bold text-xl mb-2 border-b border-gray-600 pb-2">Mes Ventes</h3><div class="space-y-2">${salesHTML}</div></div><div><h3 class="font-bold text-xl mb-2 border-b border-gray-600 pb-2">Mes Achats</h3><div class="space-y-2">${purchasesHTML}</div></div></div>
-                    </div>`;
-                accountModal.classList.remove('hidden');
             }
+
+            async function initializeAppLogic() {
+                const firebaseConfig = {
+                    apiKey: "AIzaSyB0tQRqJaOgqIi7Sbk0v1JPJZbSabzMmBo",
+                    authDomain: "greenecogenius.firebaseapp.com",
+                    projectId: "greenecogenius",
+                    storageBucket: "greenecogenius.firebasestorage.app",
+                    messagingSenderId: "201115761499",
+                    appId: "1:201115761499:web:87f9961ff40f8a5e04387e",
+                    measurementId: "G-LNSR09QLWD"
+                };
+                const appId = "greenecogenius";
+
+                const app = initializeApp(firebaseConfig);
+                const db = getFirestore(app);
+                const auth = getAuth(app);
+                
+                initializeChart();
+
+                onAuthStateChanged(auth, (user) => {
+                    // Si un utilisateur est connecté (qu'il soit anonyme ou enregistré), on écoute la base de données
+                    if (user) {
+                        const materialsCollectionPath = `/artifacts/${appId}/public/data/materials`;
+                        const materialsCol = collection(db, materialsCollectionPath);
+                        
+                        onSnapshot(materialsCol, (snapshot) => {
+                            allMaterials = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                            if(loadingIndicator) loadingIndicator.style.display = 'none';
+                            filterAndSearch();
+                            updateChart(allMaterials);
+                        }, (error) => {
+                            console.error("Erreur de lecture de la base de données: ", error);
+                            if(loadingIndicator) loadingIndicator.innerHTML = '<p class="text-center col-span-full text-red-400">Erreur de connexion à la base de données.</p>';
+                        });
+                    } else {
+                        // S'il n'y a absolument aucun utilisateur, on tente une connexion anonyme
+                        signInAnonymously(auth).catch(error => {
+                             console.error("Erreur de connexion anonyme:", error);
+                             if(loadingIndicator) loadingIndicator.innerHTML = '<p class="text-center col-span-full text-red-400">Le service est momentanément indisponible.</p>';
+                        });
+                    }
+                });
+
+                searchInput.addEventListener('input', filterAndSearch);
+                categoryFilter.addEventListener('change', filterAndSearch);
+                countryFilter.addEventListener('change', filterAndSearch);
+            }
+
+            initializeAppLogic();
         });
     </script>
 </body>
