@@ -59,7 +59,7 @@
         .btn-danger { background-color: var(--color-danger); color: white; }
 
         /* --- Dropdown Menu --- */
-        .dropdown:hover .dropdown-menu { display: block; }
+        /* La règle de hover a été supprimée, gérée par JS maintenant */
     </style>
 </head>
 <body id="le-comptoir-app" class="relative">
@@ -297,7 +297,6 @@
                 const filtered = allMaterials.filter(material => {
                     const countryMatch = country === 'all' || (material.location || '').toLowerCase().includes(country.toLowerCase());
                     const categoryMatch = category === 'all' || material.category === category;
-                    // CORRECTION ICI: On cherche dans `supplierName` ET `supplier` pour la compatibilité
                     const supplierInfo = material.supplierName || material.supplier || '';
                     const searchMatch = search === '' || (material.name || '').toLowerCase().includes(search) || supplierInfo.toLowerCase().includes(search);
                     return countryMatch && categoryMatch && searchMatch;
@@ -340,12 +339,28 @@
             
             document.addEventListener('click', e => {
                 const target = e.target;
+
+                // --- CORRECTION: Logique du menu déroulant ---
+                const dropdownMenu = document.querySelector('.dropdown-menu');
+                if (target.closest('#account-menu-btn')) {
+                    dropdownMenu.classList.toggle('hidden');
+                } else if (!target.closest('.dropdown')) {
+                    dropdownMenu.classList.add('hidden');
+                }
+
+                // --- Logique des modales ---
                 if(target.closest('[data-close-modal]')) document.getElementById(target.closest('[data-close-modal]').dataset.closeModal).classList.add('hidden');
                 if(target.closest('#open-login-modal-btn')) document.getElementById('login-modal').classList.remove('hidden');
                 if(target.closest('#open-register-modal-btn')) document.getElementById('register-modal').classList.remove('hidden');
                 if(target.closest('#open-sell-modal-btn')) document.getElementById('sell-material-modal').classList.remove('hidden');
-                if(target.closest('#logout-btn')) signOut(auth);
-                if(target.closest('#open-account-btn')) openAccountModal();
+                if(target.closest('#logout-btn')) {
+                    signOut(auth);
+                    dropdownMenu.classList.add('hidden');
+                }
+                if(target.closest('#open-account-btn')) {
+                    openAccountModal();
+                    dropdownMenu.classList.add('hidden');
+                }
                 if(target.closest('[data-buy-id]')) {
                     const materialId = target.closest('[data-buy-id]').dataset.buyId;
                     const material = allMaterials.find(m => m.id === materialId);
@@ -462,3 +477,4 @@
     </script>
 </body>
 </html>
+
