@@ -84,7 +84,7 @@
             </div>
         </div>
         <div class="flex flex-col lg:flex-row gap-8">
-            <div class="w-full lg:w-2/3"><h2 class="text-xl font-semibold mb-4">Stock disponible en temps réel</h2><div id="materials-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6 min-h-[300px]"><p id="loading-indicator" class="col-span-full text-center">Veuillez vous connecter pour voir les lots...</p></div></div>
+            <div class="w-full lg:w-2/3"><h2 class="text-xl font-semibold mb-4">Stock disponible en temps réel</h2><div id="materials-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6 min-h-[300px]"><p id="loading-indicator" class="col-span-full text-center">Chargement des lots...</p></div></div>
             <aside class="w-full lg:w-1/3"><div class="bg-[var(--color-secondary-bg)] p-6 rounded-lg shadow-xl sticky top-8"><h3 class="text-xl font-semibold mb-4">Aperçu du Marché</h3><div><canvas id="volumeChart"></canvas></div></div></aside>
         </div>
     </main>
@@ -124,12 +124,13 @@
             const app = initializeApp(firebaseConfig);
             const db = getFirestore(app);
             const auth = getAuth(app);
+            const appId = "greenecogenius";
             
             let allMaterials = [];
             let currentUser = null;
             let currentUserData = {};
-            let materialsListener = null; 
             
+            // --- UI Management ---
             const ui = {
                 loggedOutView: document.getElementById('logged-out-view'),
                 loggedInView: document.getElementById('logged-in-view'),
@@ -138,40 +139,31 @@
                 loadingIndicator: document.getElementById('loading-indicator'),
                 
                 update: async (user) => {
-                    if (materialsListener) { materialsListener(); }
                     if (user) {
                         currentUser = user;
-                        const userDoc = await getDoc(doc(db, 'users', user.uid));
+                        const userRef = doc(db, 'artifacts', appId, 'users', user.uid);
+                        const userDoc = await getDoc(userRef);
                         if(userDoc.exists()) {
                             currentUserData = userDoc.data();
                             ui.accountMenuBtn.textContent = (currentUserData.name || currentUserData.email)[0].toUpperCase();
                         }
                         ui.loggedOutView.classList.add('hidden');
                         ui.loggedInView.classList.remove('hidden');
-                        const materialsCol = collection(db, 'materials');
-                        materialsListener = onSnapshot(materialsCol, snapshot => {
-                            allMaterials = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-                            ui.loadingIndicator.style.display = 'none';
-                            displayMaterials();
-                        }, error => {
-                            ui.loadingIndicator.textContent = 'Erreur de lecture des données.';
-                            console.error(error);
-                        });
                     } else {
-                        currentUser = null; currentUserData = {}; allMaterials = []; 
+                        currentUser = null; currentUserData = {};
                         ui.loggedOutView.classList.remove('hidden'); ui.loggedInView.classList.add('hidden');
-                        ui.loadingIndicator.style.display = ''; ui.loadingIndicator.textContent = "Veuillez vous connecter pour voir les lots.";
-                        displayMaterials();
                     }
+                    displayMaterials();
                 }
             };
             
+            // --- Data Display ---
             function displayMaterials() {
                 const search = document.getElementById('search-input').value.toLowerCase();
                 const category = document.getElementById('category-filter').value;
                 const country = document.getElementById('country-filter').value;
+                
                 ui.grid.innerHTML = ''; 
-                if (!currentUser) { return; }
                 const filtered = allMaterials.filter(material => {
                     const countryMatch = country === 'all' || (material.location || '').toLowerCase().includes(country.toLowerCase());
                     const categoryMatch = category === 'all' || material.category === category;
@@ -180,23 +172,40 @@
                     return countryMatch && categoryMatch && searchMatch;
                 });
                 if(filtered.length === 0) {
-                    ui.grid.innerHTML = `<p class="col-span-full text-center">Aucun matériau ne correspond à votre recherche.</p>`;
+                    ui.loadingIndicator.style.display = 'block';
+                    ui.loadingIndicator.textContent = 'Aucun matériau ne correspond à votre recherche.';
                     return;
                 }
+                ui.loadingIndicator.style.display = 'none';
+
                 filtered.forEach(material => {
                     const card = document.createElement('div');
                     card.className = 'bg-[var(--color-card-bg)] rounded-lg shadow-lg overflow-hidden flex flex-col justify-between transform hover:-translate-y-2 transition duration-300 fade-in';
                     const isOwner = currentUser && material.sellerId === currentUser.uid;
                     const supplierInfo = material.supplierName || material.supplier || 'N/A';
-                    let actionButtonHTML = `<div class="p-4 bg-[var(--color-dark-bg)]"><button data-buy-id="${material.id}" class="bg-[var(--color-primary)] btn-primary-text font-bold py-2 px-4 rounded-full w-full">Acheter ce lot</button></div>`;
-                    if (isOwner) { actionButtonHTML = `<div class="p-4 bg-[var(--color-dark-bg)]"><div class="tag-own text-center font-bold py-2 px-4 rounded-full w-full">Votre lot</div></div>`; }
+                    let actionButtonHTML = `<div class="p-4 bg-[var(--color-dark-bg)]"><button class="bg-gray-500 text-white font-bold py-2 px-4 rounded-full w-full cursor-not-allowed" disabled>Connectez-vous pour acheter</button></div>`;
+
+                    if (currentUser) {
+                        if (isOwner) {
+                            actionButtonHTML = `<div class="p-4 bg-[var(--color-dark-bg)]"><div class="tag-own text-center font-bold py-2 px-4 rounded-full w-full">Votre lot</div></div>`;
+                        } else {
+                            actionButtonHTML = `<div class="p-4 bg-[var(--color-dark-bg)]"><button data-buy-id="${material.id}" class="bg-[var(--color-primary)] btn-primary-text font-bold py-2 px-4 rounded-full w-full">Acheter ce lot</button></div>`;
+                        }
+                    }
                     card.innerHTML = `<div><img src="https://placehold.co/600x400/112f3b/5affb5?text=${encodeURIComponent(material.category)}" alt="${material.name}" class="w-full h-40 object-cover"><div class="p-5"><span class="tag text-xs font-semibold py-1 px-3 rounded-full">${material.category}</span><h3 class="text-lg font-bold mt-3">${material.name}</h3><p class="text-sm mt-2 opacity-80"><i class="fas fa-user mr-2"></i>${supplierInfo}</p><p class="text-sm mt-1 opacity-80"><i class="fas fa-map-marker-alt mr-2"></i>${material.location}</p><div class="mt-4 flex justify-between items-center"><div><p class="text-sm font-semibold">${material.quantity} ${material.unit}</p><p class="text-xs opacity-80">disponibles</p></div><div class="text-right"><p class="text-lg font-bold text-[var(--color-primary)]">${new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(material.price || 0)}</p><p class="text-xs opacity-80">par ${material.unit}</p></div></div></div></div>${actionButtonHTML}`;
                     ui.grid.appendChild(card);
                 });
             }
 
-            // --- LISTENERS ---
+            // --- Listeners ---
+            const materialsCol = collection(db, 'artifacts', appId, 'public', 'data', 'materials');
+            onSnapshot(materialsCol, snapshot => {
+                allMaterials = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+                displayMaterials();
+            }, error => console.error("Erreur de lecture des matériaux: ", error));
+
             onAuthStateChanged(auth, ui.update);
+            
             document.addEventListener('click', e => {
                 const target = e.target;
                 const dropdownMenu = document.getElementById('account-dropdown-menu');
@@ -221,12 +230,15 @@
             document.getElementById('search-input').addEventListener('input', displayMaterials);
             document.getElementById('category-filter').addEventListener('change', displayMaterials);
             document.getElementById('country-filter').addEventListener('change', displayMaterials);
+            
+            // --- Form Submissions ---
             document.getElementById('register-form').addEventListener('submit', async e => {
                 e.preventDefault();
                 const name = e.target['register-name'].value; const email = e.target['register-email'].value; const password = e.target['register-password'].value;
                 try {
                     const cred = await createUserWithEmailAndPassword(auth, email, password);
-                    await setDoc(doc(db, "users", cred.user.uid), { name, email, createdAt: serverTimestamp() });
+                    const userRef = doc(db, 'artifacts', appId, 'users', cred.user.uid);
+                    await setDoc(userRef, { name, email, createdAt: serverTimestamp() });
                     document.getElementById('register-modal').classList.add('hidden'); e.target.reset();
                 } catch (error) { document.getElementById('register-error').textContent = error.message; }
             });
@@ -244,17 +256,18 @@
                     name: e.target['material-name'].value, category: e.target['material-category'].value, quantity: parseFloat(e.target['material-quantity'].value), unit: e.target['material-unit'].value, price: parseFloat(e.target['material-price'].value), location: e.target['material-location'].value,
                     sellerId: currentUser.uid, supplierName: currentUserData.name, createdAt: serverTimestamp() };
                 try {
-                    await addDoc(collection(db, 'materials'), newMaterial);
+                    const materialsColRef = collection(db, 'artifacts', appId, 'public', 'data', 'materials');
+                    await addDoc(materialsColRef, newMaterial);
                     document.getElementById('sell-material-modal').classList.add('hidden'); e.target.reset();
                 } catch(error) { document.getElementById('sell-form-error').textContent = error.message; }
             });
             async function buyMaterial(materialId) {
                 if(!currentUser) return;
-                const materialRef = doc(db, 'materials', materialId);
+                const materialRef = doc(db, 'artifacts', appId, 'public', 'data', 'materials', materialId);
                 const materialDoc = await getDoc(materialRef);
                 if (!materialDoc.exists()) { console.error("Lot introuvable!"); return; }
                 const batch = writeBatch(db);
-                const purchaseRef = doc(collection(db, 'purchases'));
+                const purchaseRef = doc(collection(db, 'artifacts', appId, 'public', 'data', 'purchases'));
                 batch.set(purchaseRef, { ...materialDoc.data(), buyerId: currentUser.uid, purchaseDate: serverTimestamp() });
                 batch.delete(materialRef);
                 await batch.commit();
@@ -265,49 +278,30 @@
                 let salesHTML = `<div class="p-2 text-center text-gray-400">Vous n'avez aucun lot en vente.</div>`;
                 let purchasesHTML = `<div class="p-2 text-center text-gray-400">Vous n'avez réalisé aucun achat.</div>`;
                 try {
-                    const salesQuery = query(collection(db, "materials"), where("sellerId", "==", currentUser.uid));
+                    const salesQuery = query(collection(db, 'artifacts', appId, 'public', 'data', 'materials'), where("sellerId", "==", currentUser.uid));
                     const salesSnapshot = await getDocs(salesQuery);
                     if(!salesSnapshot.empty) {
-                        salesHTML = salesSnapshot.docs.map(d => {
-                            const data = d.data();
-                            return `<div class="p-3 bg-[var(--color-dark-bg)] rounded-lg flex justify-between items-center"><span>${data.name} - ${data.quantity} ${data.unit}</span><span class="font-bold text-[var(--color-primary)]">${new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(data.price)}</span></div>`
-                        }).join('');
+                        salesHTML = salesSnapshot.docs.map(d => `<div class="p-3 bg-[var(--color-dark-bg)] rounded-lg flex justify-between items-center"><span>${d.data().name} - ${d.data().quantity} ${d.data().unit}</span><span class="font-bold text-[var(--color-primary)]">${new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(d.data().price)}</span></div>`).join('');
                     }
-                    const purchasesQuery = query(collection(db, "purchases"), where("buyerId", "==", currentUser.uid));
+                    const purchasesQuery = query(collection(db, 'artifacts', appId, 'public', 'data', 'purchases'), where("buyerId", "==", currentUser.uid));
                     const purchasesSnapshot = await getDocs(purchasesQuery);
                     if(!purchasesSnapshot.empty) {
-                        purchasesHTML = purchasesSnapshot.docs.map(d => {
-                            const data = d.data(); const supplierInfo = data.supplierName || data.supplier || 'N/A';
-                            return `<div class="p-3 bg-[var(--color-dark-bg)] rounded-lg flex justify-between items-center"><span>${data.name} (vendu par ${supplierInfo})</span><span class="font-bold text-[var(--color-primary)]">${new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(data.price)}</span></div>`
-                        }).join('');
+                        purchasesHTML = purchasesSnapshot.docs.map(d => `<div class="p-3 bg-[var(--color-dark-bg)] rounded-lg flex justify-between items-center"><span>${d.data().name} (vendu par ${d.data().supplierName || d.data().supplier})</span><span class="font-bold text-[var(--color-primary)]">${new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(d.data().price)}</span></div>`).join('');
                     }
                 } catch (error) {
                     console.error("Erreur d'index Firestore détectée:", error);
-                    const urlRegex = /(https?:\/\/[^\s]+)/;
-                    const foundUrl = error.message.match(urlRegex);
-                    let errorMessage = `
+                    const indexErrorMessage = `
                         <div class="p-4 bg-yellow-900/50 border border-yellow-700 text-yellow-200 rounded-lg">
                             <p class="font-bold text-lg text-center">Action requise sur votre base de données</p>
                             <p class="mt-2">Pour afficher vos ventes et achats, un "index" est nécessaire. Il semble qu'il manque. C'est très simple à créer manuellement :</p>
                             <ol class="list-decimal list-inside mt-2 space-y-1">
-                                <li>Allez sur votre console Firebase > Firestore Database > onglet Index.</li>
-                                <li>Créez un index pour les <b>Ventes</b> avec: Collection ID: <code>materials</code>, Champ: <code>sellerId</code> (Croissant).</li>
-                                <li>Créez un autre index pour les <b>Achats</b> avec: Collection ID: <code>purchases</code>, Champ: <code>buyerId</code> (Croissant).</li>
+                                <li>Allez sur votre console Firebase > Firestore Database > onglet Index > Champ individuel.</li>
+                                <li><b>Pour les Ventes:</b> Ajoutez une exception pour la collection <code>materials</code>, champ <code>sellerId</code> (Croissant & Décroissant).</li>
+                                <li><b>Pour les Achats:</b> Ajoutez une exception pour la collection <code>purchases</code>, champ <code>buyerId</code> (Croissant & Décroissant).</li>
                             </ol>
-                            <p class="mt-2 text-sm">Après la création (quelques minutes), rafraîchissez cette page.</p>
+                            <p class="mt-2 text-sm">Après la création (quelques minutes), rafraîchissez cette page et ré-ouvrez "Mon Compte".</p>
                         </div>`;
-                    if (foundUrl && foundUrl[0]) {
-                        const indexUrl = foundUrl[0].replace('?create_composite', '&create_composite');
-                        errorMessage = `
-                            <div class="p-4 bg-yellow-900/50 border border-yellow-700 text-yellow-200 rounded-lg text-center">
-                                <p class="font-bold text-lg">Action requise sur votre base de données</p>
-                                <p class="mt-2">Pour afficher vos ventes et achats, un "index" est nécessaire. C'est très simple à créer :</p>
-                                <a href="${indexUrl}" target="_blank" class="mt-4 inline-block bg-yellow-500 text-black font-bold py-2 px-4 rounded hover:bg-yellow-400">1. Cliquez ici pour ouvrir Firebase</a>
-                                <p class="mt-2 text-sm">2. Sur la page qui s'ouvre, vérifiez les informations et cliquez sur "Créer un index".</p>
-                                <p class="mt-2 text-sm">3. Attendez quelques minutes, puis rafraîchissez cette page et ré-ouvrez "Mon Compte".</p>
-                            </div>`;
-                    }
-                    salesHTML = errorMessage; purchasesHTML = '';
+                    salesHTML = indexErrorMessage; purchasesHTML = '';
                 }
                 accountModal.innerHTML = `
                     <div class="bg-[var(--color-secondary-bg)] rounded-lg shadow-2xl p-8 w-full max-w-3xl modal-content max-h-[80vh] overflow-y-auto">
