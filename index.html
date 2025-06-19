@@ -285,7 +285,17 @@
                     console.error("Erreur d'index Firestore détectée:", error);
                     const urlRegex = /(https?:\/\/[^\s]+)/;
                     const foundUrl = error.message.match(urlRegex);
-                    let errorMessage = `<div class="p-2 text-red-400 text-center">Une erreur est survenue. Veuillez vérifier la console du navigateur.</div>`;
+                    let errorMessage = `
+                        <div class="p-4 bg-yellow-900/50 border border-yellow-700 text-yellow-200 rounded-lg">
+                            <p class="font-bold text-lg text-center">Action requise sur votre base de données</p>
+                            <p class="mt-2">Pour afficher vos ventes et achats, un "index" est nécessaire. Il semble qu'il manque. C'est très simple à créer manuellement :</p>
+                            <ol class="list-decimal list-inside mt-2 space-y-1">
+                                <li>Allez sur votre console Firebase > Firestore Database > onglet Index.</li>
+                                <li>Créez un index pour les <b>Ventes</b> avec: Collection ID: <code>materials</code>, Champ: <code>sellerId</code> (Croissant).</li>
+                                <li>Créez un autre index pour les <b>Achats</b> avec: Collection ID: <code>purchases</code>, Champ: <code>buyerId</code> (Croissant).</li>
+                            </ol>
+                            <p class="mt-2 text-sm">Après la création (quelques minutes), rafraîchissez cette page.</p>
+                        </div>`;
                     if (foundUrl && foundUrl[0]) {
                         const indexUrl = foundUrl[0].replace('?create_composite', '&create_composite');
                         errorMessage = `
@@ -310,4 +320,3 @@
     </script>
 </body>
 </html>
-
