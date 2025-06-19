@@ -236,7 +236,7 @@
             let allMaterials = [];
             let currentUser = null;
             let currentUserData = {};
-            let materialsListener = null; // Variable pour garder une référence au listener
+            let materialsListener = null; 
             
             const ui = {
                 loggedOutView: document.getElementById('logged-out-view'),
@@ -246,9 +246,8 @@
                 loadingIndicator: document.getElementById('loading-indicator'),
                 
                 update: async (user) => {
-                    // Détacher l'ancien listener s'il existe pour éviter les écoutes multiples
                     if (materialsListener) {
-                        materialsListener(); // onSnapshot retourne une fonction pour se désinscrire
+                        materialsListener(); 
                     }
 
                     if (user) {
@@ -261,7 +260,6 @@
                         ui.loggedOutView.classList.add('hidden');
                         ui.loggedInView.classList.remove('hidden');
 
-                        // Attacher le listener pour les matériaux maintenant qu'on est connecté
                         const materialsCol = collection(db, 'materials');
                         materialsListener = onSnapshot(materialsCol, snapshot => {
                             allMaterials = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -275,7 +273,7 @@
                     } else {
                         currentUser = null;
                         currentUserData = {};
-                        allMaterials = []; // Vider les matériaux si déconnecté
+                        allMaterials = []; 
                         ui.loggedOutView.classList.remove('hidden');
                         ui.loggedInView.classList.add('hidden');
                         ui.loadingIndicator.style.display = '';
@@ -290,9 +288,8 @@
                 const category = document.getElementById('category-filter').value;
                 const country = document.getElementById('country-filter').value;
                 
-                ui.grid.innerHTML = ''; // Toujours vider la grille
+                ui.grid.innerHTML = ''; 
                 
-                // Si déconnecté, ne rien afficher
                 if (!currentUser) {
                     return;
                 }
@@ -300,7 +297,9 @@
                 const filtered = allMaterials.filter(material => {
                     const countryMatch = country === 'all' || (material.location || '').toLowerCase().includes(country.toLowerCase());
                     const categoryMatch = category === 'all' || material.category === category;
-                    const searchMatch = search === '' || (material.name || '').toLowerCase().includes(search) || (material.supplierName || '').toLowerCase().includes(search);
+                    // CORRECTION ICI: On cherche dans `supplierName` ET `supplier` pour la compatibilité
+                    const supplierInfo = material.supplierName || material.supplier || '';
+                    const searchMatch = search === '' || (material.name || '').toLowerCase().includes(search) || supplierInfo.toLowerCase().includes(search);
                     return countryMatch && categoryMatch && searchMatch;
                 });
                 
@@ -312,6 +311,7 @@
                     const card = document.createElement('div');
                     card.className = 'bg-[var(--color-card-bg)] rounded-lg shadow-lg overflow-hidden flex flex-col justify-between transform hover:-translate-y-2 transition duration-300 fade-in';
                     const isOwner = currentUser && material.sellerId === currentUser.uid;
+                    const supplierInfo = material.supplierName || material.supplier || 'N/A';
                     let actionButtonHTML = `<div class="p-4 bg-[var(--color-dark-bg)]"><button data-buy-id="${material.id}" class="bg-[var(--color-primary)] btn-primary-text font-bold py-2 px-4 rounded-full w-full">Acheter ce lot</button></div>`;
                     if (isOwner) {
                          actionButtonHTML = `<div class="p-4 bg-[var(--color-dark-bg)]"><div class="tag-own text-center font-bold py-2 px-4 rounded-full w-full">Votre lot</div></div>`;
@@ -322,7 +322,7 @@
                             <div class="p-5">
                                 <span class="tag text-xs font-semibold py-1 px-3 rounded-full">${material.category}</span>
                                 <h3 class="text-lg font-bold mt-3">${material.name}</h3>
-                                <p class="text-sm mt-2 opacity-80"><i class="fas fa-user mr-2"></i>${material.supplierName}</p>
+                                <p class="text-sm mt-2 opacity-80"><i class="fas fa-user mr-2"></i>${supplierInfo}</p>
                                 <p class="text-sm mt-1 opacity-80"><i class="fas fa-map-marker-alt mr-2"></i>${material.location}</p>
                                 <div class="mt-4 flex justify-between items-center">
                                     <div><p class="text-sm font-semibold">${material.quantity} ${material.unit}</p><p class="text-xs opacity-80">disponibles</p></div>
@@ -417,26 +417,33 @@
 
             async function openAccountModal() {
                 const accountModal = document.getElementById('account-modal');
-                let salesHTML = '<div class="p-2">Aucune vente en cours.</div>';
-                let purchasesHTML = '<div class="p-2">Aucun achat.</div>';
+                let salesHTML = `<div class="p-2 text-center text-gray-400">Vous n'avez aucun lot en vente.</div>`;
+                let purchasesHTML = `<div class="p-2 text-center text-gray-400">Vous n'avez réalisé aucun achat.</div>`;
                 
-                const salesQuery = query(collection(db, "materials"), where("sellerId", "==", currentUser.uid));
-                const salesSnapshot = await getDocs(salesQuery);
-if(!salesSnapshot.empty) {
-    salesHTML = salesSnapshot.docs.map(d => {
-        const data = d.data();
-        return `<div class="p-3 bg-[var(--color-dark-bg)] rounded-lg flex justify-between items-center"><span>${data.name} - ${data.quantity} ${data.unit}</span><span class="font-bold text-[var(--color-primary)]">${new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(data.price)}</span></div>`
-    }).join('');
-}
+                try {
+                    const salesQuery = query(collection(db, "materials"), where("sellerId", "==", currentUser.uid));
+                    const salesSnapshot = await getDocs(salesQuery);
+                    if(!salesSnapshot.empty) {
+                        salesHTML = salesSnapshot.docs.map(d => {
+                            const data = d.data();
+                            return `<div class="p-3 bg-[var(--color-dark-bg)] rounded-lg flex justify-between items-center"><span>${data.name} - ${data.quantity} ${data.unit}</span><span class="font-bold text-[var(--color-primary)]">${new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(data.price)}</span></div>`
+                        }).join('');
+                    }
 
-                const purchasesQuery = query(collection(db, "purchases"), where("buyerId", "==", currentUser.uid));
-                const purchasesSnapshot = await getDocs(purchasesQuery);
-if(!purchasesSnapshot.empty) {
-    purchasesHTML = purchasesSnapshot.docs.map(d => {
-        const data = d.data();
-        return `<div class="p-3 bg-[var(--color-dark-bg)] rounded-lg flex justify-between items-center"><span>${data.name} (vendu par ${data.supplierName})</span><span class="font-bold text-[var(--color-primary)]">${new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(data.price)}</span></div>`
-    }).join('');
-}
+                    const purchasesQuery = query(collection(db, "purchases"), where("buyerId", "==", currentUser.uid));
+                    const purchasesSnapshot = await getDocs(purchasesQuery);
+                    if(!purchasesSnapshot.empty) {
+                        purchasesHTML = purchasesSnapshot.docs.map(d => {
+                            const data = d.data();
+                            const supplierInfo = data.supplierName || data.supplier || 'N/A';
+                            return `<div class="p-3 bg-[var(--color-dark-bg)] rounded-lg flex justify-between items-center"><span>${data.name} (vendu par ${supplierInfo})</span><span class="font-bold text-[var(--color-primary)]">${new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(data.price)}</span></div>`
+                        }).join('');
+                    }
+                } catch (error) {
+                    console.error("Erreur lors de la récupération des données du compte:", error);
+                    salesHTML = `<div class="p-2 text-red-400 text-center">Erreur. Avez-vous créé les index dans Firestore ? Voir la console pour les détails.</div>`;
+                    purchasesHTML = ``;
+                }
                 
                 accountModal.innerHTML = `
                     <div class="bg-[var(--color-secondary-bg)] rounded-lg shadow-2xl p-8 w-full max-w-3xl modal-content max-h-[80vh] overflow-y-auto">
@@ -455,4 +462,3 @@ if(!purchasesSnapshot.empty) {
     </script>
 </body>
 </html>
-
