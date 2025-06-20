@@ -1,145 +1,256 @@
-// Authentification Firebase + Routing protégé (suite du template)
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Le Comptoir Circulaire - GreenEcoGenius</title>
+    
+    <!-- Tailwind CSS & Google Fonts -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" xintegrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-// Étape 1 : Configuration de Firebase
-// src/services/firebase.js
-import { initializeApp } from "firebase/app";
-import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "firebase/auth";
+    <style>
+        /* NOUVELLE PALETTE DE COULEURS - THÈME CLAIR */
+        :root {
+            --color-bg: #FFFFFF; 
+            --color-bg-alt: #f8f9fa;
+            --color-card-bg: #FFFFFF;
+            --color-text: #333333;
+            --color-text-secondary: #888888;
+            --color-primary: #8EDC3F;
+            --color-primary-darker: #7cc930;
+            --color-accent: #2A833D;
+            --color-border: #eef2f5;
+            --color-danger: #e74c3c;
+            --font-main: 'Poppins', sans-serif;
+        }
+        body { font-family: var(--font-main); background-color: var(--color-bg-alt); color: var(--color-text); }
+        .tag { background-color: rgba(42, 131, 61, 0.1); color: var(--color-accent) !important; font-weight: 600; }
+        .tag-own { background-color: var(--color-accent); color: white !important; }
+        .fade-in { animation: fadeIn 0.5s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .modal-backdrop { animation: fadeIn 0.3s ease-in-out; }
+        .modal-content { animation: slideInUp 0.4s ease-in-out; }
+        @keyframes slideInUp { from { opacity: 0; transform: translateY(50px); } to { opacity: 1; transform: translateY(0); } }
+        .form-input, .form-select { background-color: #f8f9fa !important; color: #333333 !important; border: 1px solid var(--color-border); }
+        .form-select option { background-color: white; color: black; }
+        .btn-primary-text { color: var(--color-accent) !important; }
+        .btn-danger { background-color: var(--color-danger); color: white; }
+    </style>
+</head>
+<body id="le-comptoir-app" class="relative">
 
-const firebaseConfig = {
-  apiKey: "AIzaSyB0tQRqJaOgqIi7Sbk0v1JPJZbSabzMmBo",
-  authDomain: "greenecogenius.firebaseapp.com",
-  projectId: "greenecogenius",
-  storageBucket: "greenecogenius.firebasestorage.app",
-  messagingSenderId: "201115761499",
-  appId: "1:201115761499:web:87f9961ff40f8a5e04387e",
-  measurementId: "G-LNSR09QLWD"
-};
+    <header class="bg-white shadow-sm sticky top-0 z-40">
+        <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-800">Le Comptoir Circulaire</h1>
+                <p class="text-sm text-gray-500">Par GreenEcoGenius</p>
+            </div>
+            <div id="auth-container" class="flex items-center gap-4">
+                <div id="logged-out-view">
+                    <button id="open-login-modal-btn" class="font-semibold text-gray-600 hover:text-gray-900 transition duration-300">Connexion</button>
+                    <button id="open-register-modal-btn" class="bg-[var(--color-primary)] text-white font-bold py-2 px-6 rounded-full hover:bg-[var(--color-primary-darker)] transition duration-300">Inscription</button>
+                </div>
+                <div id="logged-in-view" class="hidden flex items-center gap-4">
+                    <button id="open-sell-modal-btn" class="bg-[var(--color-primary)] text-white font-bold py-2 px-6 rounded-full hover:bg-[var(--color-primary-darker)] transition duration-300"><i class="fas fa-plus-circle mr-2"></i>Vendre un lot</button>
+                    <div class="relative dropdown">
+                        <button id="account-menu-btn" class="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center text-xl font-bold text-gray-600 uppercase"></button>
+                        <div id="account-dropdown-menu" class="dropdown-menu absolute right-0 mt-2 w-48 bg-white rounded-md shadow-xl z-20 hidden">
+                            <a href="#" id="open-account-btn" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Mon Compte</a>
+                            <a href="#" id="logout-btn" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Déconnexion</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-export { auth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged };
+    <main class="container mx-auto px-6 py-8">
+        <div class="bg-white p-6 rounded-lg shadow-sm border border-[var(--color-border)] mb-8">
+             <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                <div class="md:col-span-2 lg:col-span-2"><label for="search-input" class="block mb-2 text-sm font-medium text-gray-700">Rechercher un matériau</label><div class="relative"><span class="absolute inset-y-0 left-0 flex items-center pl-3"><i class="fas fa-search text-gray-400"></i></span><input type="text" id="search-input" class="w-full bg-gray-50 border border-gray-300 rounded-lg py-2 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]" placeholder="Ex: Plastique HDPE, Cuivre..."></div></div>
+                <div><label for="category-filter" class="block mb-2 text-sm font-medium text-gray-700">Catégorie</label><select id="category-filter" class="w-full bg-gray-50 border border-gray-300 rounded-lg py-2 px-3 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"><option value="all">Toutes</option><option value="Plastiques">Plastiques</option><option value="Métaux">Métaux</option><option value="Papiers/Cartons">Papiers/Cartons</option><option value="Verre">Verre</option><option value="Bois">Bois</option></select></div>
+                <div><label for="country-filter" class="block mb-2 text-sm font-medium text-gray-700">Pays</label><select id="country-filter" class="w-full bg-gray-50 border border-gray-300 rounded-lg py-2 px-3 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"><option value="all">Tous</option><option value="France">France</option><option value="Allemagne">Allemagne</option><option value="Italie">Italie</option><option value="Espagne">Espagne</option></select></div>
+            </div>
+        </div>
+        <div class="flex flex-col lg:flex-row gap-8">
+            <div class="w-full lg:w-2/3"><h2 class="text-2xl font-semibold mb-4 text-gray-800">Stock disponible en temps réel</h2><div id="materials-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6 min-h-[300px]"><p id="loading-indicator" class="col-span-full text-center text-gray-500">Chargement des lots...</p></div></div>
+            <aside class="w-full lg:w-1/3"><div class="bg-white p-6 rounded-lg shadow-sm border border-[var(--color-border)] sticky top-24"><h3 class="text-xl font-semibold mb-4 text-gray-800">Aperçu du Marché</h3><div><canvas id="volumeChart"></canvas></div></div></aside>
+        </div>
+    </main>
 
-// Étape 2 : Hook personnalisé pour suivre l'utilisateur
-// src/hooks/useAuth.js
-import { useEffect, useState, useContext, createContext } from "react";
-import { auth, onAuthStateChanged } from "../services/firebase";
-
-const AuthContext = createContext(null);
-
-export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null);
-
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, setUser);
-    return () => unsubscribe();
-  }, []);
-
-  return <AuthContext.Provider value={{ user }}>{children}</AuthContext.Provider>;
-}
-
-export function useAuth() {
-  return useContext(AuthContext);
-}
-
-// Étape 3 : Pages Login et Register
-// src/pages/Auth/Login.jsx
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { signInWithEmailAndPassword } from "../../services/firebase";
-import { auth } from "../../services/firebase";
-
-function Login() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const navigate = useNavigate();
-
-  const handleLogin = async (e) => {
-    e.preventDefault();
-    try {
-      await signInWithEmailAndPassword(auth, email, password);
-      navigate("/admin");
-    } catch (err) {
-      alert("Erreur de connexion : " + err.message);
-    }
-  };
-
-  return (
-    <form onSubmit={handleLogin} className="p-8 max-w-md mx-auto">
-      <h2 className="text-2xl font-bold mb-4">Connexion</h2>
-      <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full p-2 border mb-2" />
-      <input type="password" placeholder="Mot de passe" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full p-2 border mb-4" />
-      <button type="submit" className="bg-green-700 text-white px-4 py-2">Se connecter</button>
-    </form>
-  );
-}
-export default Login;
-
-// src/pages/Auth/Register.jsx
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { createUserWithEmailAndPassword } from "../../services/firebase";
-import { auth } from "../../services/firebase";
-
-function Register() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const navigate = useNavigate();
-
-  const handleRegister = async (e) => {
-    e.preventDefault();
-    try {
-      await createUserWithEmailAndPassword(auth, email, password);
-      navigate("/admin");
-    } catch (err) {
-      alert("Erreur d'inscription : " + err.message);
-    }
-  };
-
-  return (
-    <form onSubmit={handleRegister} className="p-8 max-w-md mx-auto">
-      <h2 className="text-2xl font-bold mb-4">Inscription</h2>
-      <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full p-2 border mb-2" />
-      <input type="password" placeholder="Mot de passe" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full p-2 border mb-4" />
-      <button type="submit" className="bg-blue-900 text-white px-4 py-2">S'inscrire</button>
-    </form>
-  );
-}
-export default Register;
-
-// Étape 4 : Ajout du AuthProvider dans main.jsx
-// Remplacer dans src/main.jsx
-// import App from "./App"; =>
-import { AuthProvider } from "./hooks/useAuth";
-
-ReactDOM.createRoot(document.getElementById("root")).render(
-  <React.StrictMode>
-    <BrowserRouter>
-      <AuthProvider>
-        <App />
-      </AuthProvider>
-    </BrowserRouter>
-  </React.StrictMode>
-);
-
-// Étape 5 : Protection des pages sensibles (exemple Admin)
-// src/pages/Admin.jsx (mise à jour)
-import { useAuth } from "../hooks/useAuth";
-import { useNavigate } from "react-router-dom";
-import { useEffect } from "react";
-
-function Admin() {
-  const { user } = useAuth();
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    if (!user) navigate("/login");
-  }, [user]);
-
-  return (
-    <div className="p-8">
-      <h2 className="text-2xl font-semibold text-green-800">Dashboard Admin</h2>
-      <p className="text-gray-700">Gestion des collectes, utilisateurs, et activités circulaires.</p>
+    <!-- Modales -->
+    <div id="sell-material-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center p-4 modal-backdrop">
+         <div class="bg-white rounded-lg shadow-2xl p-8 w-full max-w-2xl modal-content"><div class="flex justify-between items-center mb-6"><h2 class="text-2xl font-bold text-gray-800">Vendre un nouveau lot</h2><button data-close-modal="sell-material-modal" class="text-gray-400 hover:text-gray-800 text-2xl">&times;</button></div><form id="add-material-form" class="space-y-4"><div class="grid grid-cols-1 md:grid-cols-2 gap-4"><div><label for="material-name" class="block mb-2 text-sm text-gray-700">Nom du matériau</label><input type="text" id="material-name" placeholder="Ex: PET Recyclé" required class="form-input w-full rounded-lg p-2"></div><div><label for="material-category" class="block mb-2 text-sm text-gray-700">Catégorie</label><select id="material-category" required class="form-select w-full rounded-lg p-2"><option value="Plastiques">Plastiques</option><option value="Métaux">Métaux</option><option value="Papiers/Cartons">Papiers/Cartons</option><option value="Verre">Verre</option><option value="Bois">Bois</option></select></div><div><label for="material-quantity" class="block mb-2 text-sm text-gray-700">Quantité</label><input type="number" step="0.01" id="material-quantity" placeholder="10.5" required class="form-input w-full rounded-lg p-2"></div><div><label for="material-unit" class="block mb-2 text-sm text-gray-700">Unité</label><select id="material-unit" required class="form-select w-full rounded-lg p-2"><option value="tonnes">tonnes</option><option value="kg">kg</option><option value="m³">m³</option></select></div><div><label for="material-price" class="block mb-2 text-sm text-gray-700">Prix par unité (€)</label><input type="number" step="0.01" id="material-price" placeholder="550.00" required class="form-input w-full rounded-lg p-2"></div><div><label for="material-location" class="block mb-2 text-sm text-gray-700">Localisation</label><input type="text" id="material-location" placeholder="Lyon, France" required class="form-input w-full rounded-lg p-2"></div></div><div class="mt-8 flex justify-end"><button id="submit-material-btn" type="submit" class="bg-[var(--color-primary)] text-white font-bold py-3 px-8 rounded-full hover:bg-[var(--color-primary-darker)] transition duration-300 w-48 text-center"><span class="btn-text">Mettre en vente</span><span class="btn-spinner hidden"><i class="fas fa-spinner fa-spin"></i></span></button></div><p id="sell-form-error" class="text-red-500 mt-4 text-right"></p></form></div>
     </div>
-  );
-}
-export default Admin;
+    <div id="login-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center p-4 modal-backdrop">
+        <div class="bg-white rounded-lg shadow-2xl p-8 w-full max-w-md modal-content"><div class="flex justify-between items-center mb-6"><h2 class="text-2xl font-bold text-gray-800">Connexion</h2><button data-close-modal="login-modal" class="text-gray-400 hover:text-gray-800 text-2xl">&times;</button></div><form id="login-form"><div class="space-y-4"><div><label for="login-email" class="block mb-2 text-sm text-gray-700">Email</label><input type="email" id="login-email" required class="form-input w-full rounded-lg p-2"></div><div><label for="login-password" class="block mb-2 text-sm text-gray-700">Mot de passe</label><input type="password" id="login-password" required class="form-input w-full rounded-lg p-2"></div></div><div class="mt-8 flex justify-end"><button type="submit" class="bg-[var(--color-primary)] text-white font-bold py-3 px-8 rounded-full w-full">Se connecter</button></div><p id="login-error" class="text-red-500 mt-4 text-center"></p></form></div>
+    </div>
+    <div id="register-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center p-4 modal-backdrop">
+         <div class="bg-white rounded-lg shadow-2xl p-8 w-full max-w-md modal-content"><div class="flex justify-between items-center mb-6"><h2 class="text-2xl font-bold text-gray-800">Créer un compte</h2><button data-close-modal="register-modal" class="text-gray-400 hover:text-gray-800 text-2xl">&times;</button></div><form id="register-form"><div class="space-y-4"><div><label for="register-name" class="block mb-2 text-sm text-gray-700">Nom ou Entreprise</label><input type="text" id="register-name" required class="form-input w-full rounded-lg p-2"></div><div><label for="register-email" class="block mb-2 text-sm text-gray-700">Email</label><input type="email" id="register-email" required class="form-input w-full rounded-lg p-2"></div><div><label for="register-password" class="block mb-2 text-sm text-gray-700">Mot de passe (6 caractères min.)</label><input type="password" id="register-password" required class="form-input w-full rounded-lg p-2"></div></div><div class="mt-8 flex justify-end"><button type="submit" class="bg-[var(--color-primary)] text-white font-bold py-3 px-8 rounded-full w-full">S'inscrire</button></div><p id="register-error" class="text-red-500 mt-4 text-center"></p></form></div>
+    </div>
+    <div id="account-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center p-4 modal-backdrop"></div>
+    <div id="buy-confirmation-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center p-4 modal-backdrop">
+        <div class="bg-white rounded-lg shadow-2xl p-8 w-full max-w-md modal-content text-center"><h2 class="text-2xl font-bold mb-4 text-gray-800">Confirmer l'achat</h2><p id="buy-confirmation-text" class="mb-6 text-gray-600">Êtes-vous sûr de vouloir acheter ce lot ?</p><div class="flex justify-center gap-4"><button data-close-modal="buy-confirmation-modal" class="bg-gray-400 text-white font-bold py-2 px-6 rounded-full">Annuler</button><button id="confirm-buy-btn" class="btn-danger font-bold py-2 px-6 rounded-full">Confirmer</button></div></div>
+    </div>
+
+    <!-- Scripts Firebase -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getFirestore, collection, onSnapshot, addDoc, doc, getDoc, writeBatch, setDoc, query, where, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const firebaseConfig = {
+              apiKey: "AIzaSyB0tQRqJaOgqIi7Sbk0v1JPJZbSabzMmBo",
+              authDomain: "greenecogenius.firebaseapp.com",
+              projectId: "greenecogenius",
+              storageBucket: "greenecogenius.firebasestorage.app",
+              messagingSenderId: "201115761499",
+              appId: "1:201115761499:web:87f9961ff40f8a5e04387e",
+              measurementId: "G-LNSR09QLWD"
+            };
+
+            const app = initializeApp(firebaseConfig);
+            const db = getFirestore(app);
+            const auth = getAuth(app);
+            const appId = "greenecogenius";
+            
+            let allMaterials = [];
+            let currentUser = null;
+            let currentUserData = {};
+            
+            const co2Factors = { "Plastiques": 2100, "Métaux": 6500, "Papiers/Cartons": 800, "Verre": 400, "Bois": 50 };
+            const ui = {
+                loggedOutView: document.getElementById('logged-out-view'),
+                loggedInView: document.getElementById('logged-in-view'),
+                accountMenuBtn: document.getElementById('account-menu-btn'),
+                grid: document.getElementById('materials-grid'),
+                loadingIndicator: document.getElementById('loading-indicator'),
+                
+                update: async (user) => {
+                    if (user) {
+                        currentUser = user;
+                        const userRef = doc(db, 'artifacts', appId, 'users', user.uid);
+                        const userDoc = await getDoc(userRef);
+                        if(userDoc.exists()) {
+                            currentUserData = userDoc.data();
+                            const name = currentUserData.name || currentUserData.email || '';
+                            ui.accountMenuBtn.textContent = name ? name[0].toUpperCase() : '?';
+                        }
+                        ui.loggedOutView.classList.add('hidden');
+                        ui.loggedInView.classList.remove('hidden');
+                    } else {
+                        currentUser = null; currentUserData = {};
+                        ui.loggedOutView.classList.remove('hidden'); ui.loggedInView.classList.add('hidden');
+                    }
+                    displayMaterials();
+                }
+            };
+            
+            function displayMaterials() {
+                const search = document.getElementById('search-input').value.toLowerCase();
+                const category = document.getElementById('category-filter').value;
+                const country = document.getElementById('country-filter').value;
+                
+                ui.grid.innerHTML = ''; 
+                const filtered = allMaterials.filter(material => {
+                    const countryMatch = country === 'all' || (material.location || '').toLowerCase().includes(country.toLowerCase());
+                    const categoryMatch = category === 'all' || material.category === category;
+                    const supplierInfo = material.supplierName || material.supplier || '';
+                    const searchMatch = search === '' || (material.name || '').toLowerCase().includes(search) || supplierInfo.toLowerCase().includes(search);
+                    return countryMatch && categoryMatch && searchMatch;
+                });
+                if(filtered.length === 0) {
+                    ui.loadingIndicator.style.display = 'block';
+                    ui.loadingIndicator.textContent = 'Aucun matériau ne correspond à votre recherche.';
+                    return;
+                }
+                ui.loadingIndicator.style.display = 'none';
+
+                filtered.forEach(material => {
+                    const card = document.createElement('div');
+                    card.className = 'bg-white border border-[var(--border-color)] rounded-lg shadow-sm overflow-hidden flex flex-col justify-between transform hover:-translate-y-1 transition duration-300 fade-in';
+                    const isOwner = currentUser && material.sellerId === currentUser.uid;
+                    const supplierInfo = material.supplierName || material.supplier || 'N/A';
+                    const factor = co2Factors[material.category] || 0;
+                    const quantityInTons = material.unit === 'tonnes' ? (material.quantity || 0) : (material.quantity || 0) / 1000;
+                    const co2Saved = (factor * quantityInTons).toFixed(0);
+                    let actionButtonHTML = `<div class="p-4 bg-[var(--color-bg-alt)]"><button class="bg-gray-200 text-gray-500 font-bold py-2 px-4 rounded-full w-full cursor-not-allowed" disabled>Connectez-vous pour acheter</button></div>`;
+                    if (currentUser) {
+                        if (isOwner) {
+                            actionButtonHTML = `<div class="p-4 bg-[var(--color-bg-alt)]"><div class="tag-own text-center font-bold py-2 px-4 rounded-full w-full">Votre lot</div></div>`;
+                        } else {
+                            actionButtonHTML = `<div class="p-4 bg-[var(--color-bg-alt)]"><button data-buy-id="${material.id}" class="bg-[var(--color-primary)] text-white font-bold py-2 px-4 rounded-full w-full">Acheter ce lot</button></div>`;
+                        }
+                    }
+                    card.innerHTML = `
+                        <div>
+                            <img src="https://placehold.co/600x400/8EDC3F/FFFFFF?text=${encodeURIComponent(material.category)}" alt="${material.name}" class="w-full h-40 object-cover">
+                            <div class="p-5">
+                                <span class="tag text-xs font-semibold py-1 px-3 rounded-full">${material.category}</span>
+                                <h3 class="text-lg font-bold mt-3 text-gray-800">${material.name}</h3>
+                                <p class="text-sm mt-2 text-gray-600"><i class="fas fa-user mr-2 text-gray-400"></i>${supplierInfo}</p>
+                                <p class="text-sm mt-1 text-gray-600"><i class="fas fa-map-marker-alt mr-2 text-gray-400"></i>${material.location}</p>
+                                <div class="mt-4 flex justify-between items-center">
+                                    <div><p class="text-sm font-semibold text-gray-800">${material.quantity} ${material.unit}</p><p class="text-xs text-gray-500">disponibles</p></div>
+                                    <div class="text-right"><p class="text-lg font-bold text-[var(--color-accent)]">${new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(material.price || 0)}</p><p class="text-xs text-gray-500">par ${material.unit}</p></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="p-4 bg-[var(--color-bg-alt)] border-t border-[var(--color-border)]">
+                            <p class="text-sm font-semibold text-[var(--color-accent)] flex items-center justify-center">
+                                <i class="fas fa-leaf mr-2"></i>Économie de CO2 estimée : ${co2Saved} kg
+                            </p>
+                        </div>
+                        ${actionButtonHTML}`;
+                    ui.grid.appendChild(card);
+                });
+            }
+            const materialsCol = collection(db, 'artifacts', appId, 'public', 'data', 'materials');
+            onSnapshot(materialsCol, snapshot => {
+                allMaterials = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+                displayMaterials();
+            }, error => console.error("Erreur de lecture des matériaux: ", error));
+            onAuthStateChanged(auth, ui.update);
+            document.addEventListener('click', e => {
+                const target = e.target;
+                const dropdownMenu = document.getElementById('account-dropdown-menu');
+                if (target.closest('#account-menu-btn')) { dropdownMenu.classList.toggle('hidden'); } 
+                else if (!target.closest('.dropdown')) { dropdownMenu.classList.add('hidden'); }
+                if(target.closest('[data-close-modal]')) document.getElementById(target.closest('[data-close-modal]').dataset.closeModal).classList.add('hidden');
+                if(target.closest('#open-login-modal-btn')) document.getElementById('login-modal').classList.remove('hidden');
+                if(target.closest('#open-register-modal-btn')) document.getElementById('register-modal').classList.remove('hidden');
+                if(target.closest('#open-sell-modal-btn')) document.getElementById('sell-material-modal').classList.remove('hidden');
+                if(target.closest('#logout-btn')) { signOut(auth); dropdownMenu.classList.add('hidden'); }
+                if(target.closest('#open-account-btn')) { openAccountModal(); dropdownMenu.classList.add('hidden'); }
+                if(target.closest('[data-buy-id]')) {
+                    const materialId = target.closest('[data-buy-id]').dataset.buyId;
+                    const material = allMaterials.find(m => m.id === materialId);
+                    const modal = document.getElementById('buy-confirmation-modal');
+                    modal.querySelector('#buy-confirmation-text').textContent = `Acheter "${material.name}" pour ${new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(material.price || 0)} ?`;
+                    modal.querySelector('#confirm-buy-btn').dataset.materialId = materialId;
+                    modal.classList.remove('hidden');
+                }
+                if(target.closest('#confirm-buy-btn')) buyMaterial(target.closest('#confirm-buy-btn').dataset.materialId);
+            });
+            document.getElementById('search-input').addEventListener('input', displayMaterials);
+            document.getElementById('category-filter').addEventListener('change', displayMaterials);
+            document.getElementById('country-filter').addEventListener('change', displayMaterials);
+            document.getElementById('register-form').addEventListener('submit', async e => { e.preventDefault(); const name = e.target['register-name'].value; const email = e.target['register-email'].value; const password = e.target['register-password'].value; try { const cred = await createUserWithEmailAndPassword(auth, email, password); const userRef = doc(db, 'artifacts', appId, 'users', cred.user.uid); await setDoc(userRef, { name, email, createdAt: serverTimestamp() }); document.getElementById('register-modal').classList.add('hidden'); e.target.reset(); } catch (error) { document.getElementById('register-error').textContent = error.message; } });
+            document.getElementById('login-form').addEventListener('submit', async e => { e.preventDefault(); const email = e.target['login-email'].value; const password = e.target['login-password'].value; try { await signInWithEmailAndPassword(auth, email, password); document.getElementById('login-modal').classList.add('hidden'); e.target.reset(); } catch (error) { document.getElementById('login-error').textContent = "Email ou mot de passe incorrect."; } });
+            document.getElementById('add-material-form').addEventListener('submit', async e => { e.preventDefault(); if(!currentUser) return; const newMaterial = { name: e.target['material-name'].value, category: e.target['material-category'].value, quantity: parseFloat(e.target['material-quantity'].value), unit: e.target['material-unit'].value, price: parseFloat(e.target['material-price'].value), location: e.target['material-location'].value, sellerId: currentUser.uid, supplierName: currentUserData.name, createdAt: serverTimestamp() }; try { const materialsColRef = collection(db, 'artifacts', appId, 'public', 'data', 'materials'); await addDoc(materialsColRef, newMaterial); document.getElementById('sell-material-modal').classList.add('hidden'); e.target.reset(); } catch(error) { document.getElementById('sell-form-error').textContent = error.message; } });
+            async function buyMaterial(materialId) { if(!currentUser) return; const materialRef = doc(db, 'artifacts', appId, 'public', 'data', 'materials', materialId); const materialDoc = await getDoc(materialRef); if (!materialDoc.exists()) { console.error("Lot introuvable!"); return; } const batch = writeBatch(db); const purchaseRef = doc(collection(db, 'artifacts', appId, 'public', 'data', 'purchases')); batch.set(purchaseRef, { ...materialDoc.data(), buyerId: currentUser.uid, purchaseDate: serverTimestamp() }); batch.delete(materialRef); await batch.commit(); document.getElementById('buy-confirmation-modal').classList.add('hidden'); }
+            async function openAccountModal() { const accountModal = document.getElementById('account-modal'); let salesHTML = `<div class="p-2 text-center text-gray-500">Vous n'avez aucun lot en vente.</div>`; let purchasesHTML = `<div class="p-2 text-center text-gray-500">Vous n'avez réalisé aucun achat.</div>`; try { const salesQuery = query(collection(db, 'artifacts', appId, 'public', 'data', 'materials'), where("sellerId", "==", currentUser.uid)); const salesSnapshot = await getDocs(salesQuery); if(!salesSnapshot.empty) { salesHTML = salesSnapshot.docs.map(d => `<div class="p-3 bg-gray-50 border rounded-lg flex justify-between items-center"><span>${d.data().name} - ${d.data().quantity} ${d.data().unit}</span><span class="font-bold text-[var(--color-accent)]">${new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(d.data().price)}</span></div>`).join(''); } const purchasesQuery = query(collection(db, 'artifacts', appId, 'public', 'data', 'purchases'), where("buyerId", "==", currentUser.uid)); const purchasesSnapshot = await getDocs(purchasesQuery); if(!purchasesSnapshot.empty) { purchasesHTML = purchasesSnapshot.docs.map(d => `<div class="p-3 bg-gray-50 border rounded-lg flex justify-between items-center"><span>${d.data().name} (vendu par ${d.data().supplierName || d.data().supplier})</span><span class="font-bold text-[var(--color-accent)]">${new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(d.data().price)}</span></div>`).join(''); } } catch (error) { console.error("Erreur d'index Firestore détectée:", error); const indexErrorMessage = `<div class="p-4 bg-yellow-100 border border-yellow-300 text-yellow-800 rounded-lg"><p class="font-bold text-lg text-center">Action requise sur votre base de données</p><p class="mt-2">Pour afficher vos ventes et achats, un "index" est nécessaire. Il semble qu'il manque. C'est très simple à créer manuellement :</p><ol class="list-decimal list-inside mt-2 space-y-1"><li>Allez sur votre console Firebase > Firestore Database > onglet Index > Champ individuel.</li><li><b>Pour les Ventes:</b> Ajoutez une exception pour la collection <code>materials</code>, champ <code>sellerId</code> (Croissant & Décroissant).</li><li><b>Pour les Achats:</b> Ajoutez une exception pour la collection <code>purchases</code>, champ <code>buyerId</code> (Croissant & Décroissant).</li></ol><p class="mt-2 text-sm">Après la création (quelques minutes), rafraîchissez cette page et ré-ouvrez "Mon Compte".</p></div>`; salesHTML = indexErrorMessage; purchasesHTML = ''; } accountModal.innerHTML = `<div class="bg-white rounded-lg shadow-2xl p-8 w-full max-w-3xl modal-content max-h-[80vh] overflow-y-auto"><div class="flex justify-between items-center mb-6"><h2 class="text-2xl font-bold text-gray-800">Mon Compte</h2><button data-close-modal="account-modal" class="text-gray-400 hover:text-gray-800 text-2xl">&times;</button></div><div class="space-y-6"><div><h3 class="font-bold text-xl mb-2 border-b pb-2 text-gray-700">Mes Ventes</h3><div class="space-y-2">${salesHTML}</div></div><div><h3 class="font-bold text-xl mb-2 border-b pb-2 text-gray-700">Mes Achats</h3><div class="space-y-2">${purchasesHTML}</div></div></div></div>`; accountModal.classList.remove('hidden'); }
+        });
+    </script>
+</body>
+</html>
