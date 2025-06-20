@@ -17,7 +17,7 @@
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
-    <!-- Stripe.js -->
+    <!-- Stripe.js (pour le futur) -->
     <script src="https://js.stripe.com/v3/"></script>
 
     <style>
@@ -36,13 +36,8 @@
             --font-main: 'Poppins', sans-serif;
         }
         body { font-family: var(--font-main); background-color: var(--color-bg-alt); color: var(--color-text); }
-        .btn-primary {
-            background-color: var(--color-primary);
-            color: white;
-        }
-        .btn-primary:hover {
-            background-color: var(--color-primary-darker);
-        }
+        .btn-primary { background-color: var(--color-primary); color: white; }
+        .btn-primary:hover { background-color: var(--color-primary-darker); }
         .tag { background-color: rgba(42, 131, 61, 0.1); color: var(--color-accent) !important; font-weight: 600; }
         .tag-own { background-color: var(--color-accent); color: white !important; }
         .fade-in { animation: fadeIn 0.5s ease-in-out; }
@@ -53,13 +48,7 @@
         .form-input, .form-select { background-color: #f8f9fa !important; color: #333333 !important; border: 1px solid var(--color-border); }
         .spinner { animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        .error-message-box {
-            background-color: #fffbe6;
-            border: 1px solid #fde68a;
-            color: #92400e;
-            padding: 1rem;
-            border-radius: 0.5rem;
-        }
+        .error-message-box { background-color: #fffbe6; border: 1px solid #fde68a; color: #92400e; padding: 1rem; border-radius: 0.5rem; }
     </style>
 </head>
 <body id="le-comptoir-app" class="relative">
@@ -92,7 +81,6 @@
 
     <!-- Main Content -->
     <main class="container mx-auto px-4 md:px-6 py-8">
-        <!-- Filters -->
         <div class="bg-white p-4 md:p-6 rounded-lg shadow-sm border border-[var(--color-border)] mb-8">
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
                 <div class="md:col-span-2"><label for="search-input" class="block mb-2 text-sm font-medium text-gray-700">Rechercher</label><div class="relative"><span class="absolute inset-y-0 left-0 flex items-center pl-3"><i class="fas fa-search text-gray-400"></i></span><input type="text" id="search-input" class="w-full form-input rounded-lg py-2 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]" placeholder="Ex: Plastique HDPE..."></div></div>
@@ -100,67 +88,33 @@
                 <div><label for="country-filter" class="block mb-2 text-sm font-medium text-gray-700">Pays</label><select id="country-filter" class="w-full form-select rounded-lg py-2 px-3 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"><option value="all">Tous</option><option value="France">France</option><option value="Allemagne">Allemagne</option><option value="Italie">Italie</option><option value="Espagne">Espagne</option></select></div>
             </div>
         </div>
-
         <div class="flex flex-col lg:flex-row gap-8">
-            <!-- Materials Grid -->
             <div class="w-full lg:w-2/3">
                 <h2 class="text-2xl font-semibold mb-4 text-gray-800">Stock disponible</h2>
-                <div id="materials-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6 min-h-[300px]">
-                    <div id="loading-container" class="col-span-full text-center text-gray-500 p-8">
-                        <p id="loading-indicator">Chargement des lots...</p>
-                    </div>
-                </div>
+                <div id="materials-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6 min-h-[300px]"><div id="loading-container" class="col-span-full text-center text-gray-500 p-8"><p id="loading-indicator">Chargement des lots...</p></div></div>
             </div>
-            <!-- Market Chart -->
             <aside class="w-full lg:w-1/3">
-                <div class="bg-white p-4 md:p-6 rounded-lg shadow-sm border border-[var(--color-border)] sticky top-24">
-                    <h3 class="text-xl font-semibold mb-4 text-gray-800">Répartition du Marché</h3>
-                    <div class="h-64 flex items-center justify-center">
-                        <canvas id="market-chart"></canvas>
-                    </div>
-                </div>
+                <div class="bg-white p-4 md:p-6 rounded-lg shadow-sm border border-[var(--color-border)] sticky top-24"><h3 class="text-xl font-semibold mb-4 text-gray-800">Répartition du Marché</h3><div class="h-64 flex items-center justify-center"><canvas id="market-chart"></canvas></div></div>
             </aside>
         </div>
     </main>
     
     <!-- Modals -->
     <div id="modal-container">
-        <!-- Sell Material Modal -->
-        <div id="sell-material-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center p-4 modal-backdrop">
-             <div class="bg-white rounded-lg shadow-2xl p-8 w-full max-w-2xl modal-content"><div class="flex justify-between items-center mb-6"><h2 class="text-2xl font-bold text-gray-800">Vendre un nouveau lot</h2><button class="close-modal-btn text-gray-400 hover:text-gray-800 text-2xl">&times;</button></div><form id="add-material-form" class="space-y-4"><div class="grid grid-cols-1 md:grid-cols-2 gap-4"><div><label for="material-name" class="block mb-2 text-sm text-gray-700">Nom du matériau</label><input type="text" id="material-name" placeholder="Ex: PET Recyclé" required class="form-input w-full rounded-lg p-2"></div><div><label for="material-category" class="block mb-2 text-sm text-gray-700">Catégorie</label><select id="material-category" required class="form-select w-full rounded-lg p-2"><option value="Plastiques">Plastiques</option><option value="Métaux">Métaux</option><option value="Papiers/Cartons">Papiers/Cartons</option><option value="Verre">Verre</option><option value="Bois">Bois</option></select></div><div><label for="material-quantity" class="block mb-2 text-sm text-gray-700">Quantité</label><input type="number" step="0.01" id="material-quantity" placeholder="10.5" required class="form-input w-full rounded-lg p-2"></div><div><label for="material-unit" class="block mb-2 text-sm text-gray-700">Unité</label><select id="material-unit" required class="form-select w-full rounded-lg p-2"><option value="tonnes">tonnes</option><option value="kg">kg</option><option value="m³">m³</option></select></div><div><label for="material-price" class="block mb-2 text-sm text-gray-700">Prix par unité (€)</label><input type="number" step="0.01" id="material-price" placeholder="550.00" required class="form-input w-full rounded-lg p-2"></div><div><label for="material-location" class="block mb-2 text-sm text-gray-700">Localisation</label><input type="text" id="material-location" placeholder="Lyon, France" required class="form-input w-full rounded-lg p-2"></div></div><div class="mt-8 flex justify-end"><button id="submit-material-btn" type="submit" class="btn-primary font-bold py-3 px-8 rounded-full transition duration-300 w-48 text-center flex items-center justify-center"><span class="btn-text">Mettre en vente</span><span class="btn-spinner hidden ml-2"><i class="fas fa-spinner spinner"></i></span></button></div><p id="sell-form-error" class="text-red-500 mt-4 text-right"></p></form></div>
-        </div>
-        <!-- Login Modal -->
-        <div id="login-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center p-4 modal-backdrop">
-            <div class="bg-white rounded-lg shadow-2xl p-8 w-full max-w-md modal-content"><div class="flex justify-between items-center mb-6"><h2 class="text-2xl font-bold text-gray-800">Connexion</h2><button class="close-modal-btn text-gray-400 hover:text-gray-800 text-2xl">&times;</button></div><form id="login-form"><div class="space-y-4"><div><label for="login-email" class="block mb-2 text-sm text-gray-700">Email</label><input type="email" id="login-email" required class="form-input w-full rounded-lg p-2"></div><div><label for="login-password" class="block mb-2 text-sm text-gray-700">Mot de passe</label><input type="password" id="login-password" required class="form-input w-full rounded-lg p-2"></div></div><div class="mt-8 flex justify-end"><button type="submit" class="btn-primary font-bold py-3 px-8 rounded-full w-full">Se connecter</button></div><p id="login-error" class="text-red-500 mt-4 text-center"></p></form></div>
-        </div>
-        <!-- Register Modal -->
-        <div id="register-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center p-4 modal-backdrop">
-             <div class="bg-white rounded-lg shadow-2xl p-8 w-full max-w-md modal-content"><div class="flex justify-between items-center mb-6"><h2 class="text-2xl font-bold text-gray-800">Créer un compte</h2><button class="close-modal-btn text-gray-400 hover:text-gray-800 text-2xl">&times;</button></div><form id="register-form"><div class="space-y-4"><div><label for="register-name" class="block mb-2 text-sm text-gray-700">Nom ou Entreprise</label><input type="text" id="register-name" required class="form-input w-full rounded-lg p-2"></div><div><label for="register-email" class="block mb-2 text-sm text-gray-700">Email</label><input type="email" id="register-email" required class="form-input w-full rounded-lg p-2"></div><div><label for="register-password" class="block mb-2 text-sm text-gray-700">Mot de passe (6 caractères min.)</label><input type="password" id="register-password" required class="form-input w-full rounded-lg p-2"></div></div><div class="mt-8 flex justify-end"><button type="submit" class="btn-primary font-bold py-3 px-8 rounded-full w-full">S'inscrire</button></div><p id="register-error" class="text-red-500 mt-4 text-center"></p></form></div>
-        </div>
-        <!-- Account Modal -->
+        <!-- All modals will be injected here by JS or defined statically -->
+        <div id="sell-material-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center p-4 modal-backdrop"><div class="bg-white rounded-lg shadow-2xl p-8 w-full max-w-2xl modal-content"><div class="flex justify-between items-center mb-6"><h2 class="text-2xl font-bold text-gray-800">Vendre un nouveau lot</h2><button class="close-modal-btn text-gray-400 hover:text-gray-800 text-2xl">&times;</button></div><form id="add-material-form" class="space-y-4"><div class="grid grid-cols-1 md:grid-cols-2 gap-4"><div><label for="material-name" class="block mb-2 text-sm text-gray-700">Nom du matériau</label><input type="text" id="material-name" required class="form-input w-full rounded-lg p-2"></div><div><label for="material-category" class="block mb-2 text-sm text-gray-700">Catégorie</label><select id="material-category" required class="form-select w-full rounded-lg p-2"><option value="Plastiques">Plastiques</option><option value="Métaux">Métaux</option><option value="Papiers/Cartons">Papiers/Cartons</option><option value="Verre">Verre</option><option value="Bois">Bois</option></select></div><div><label for="material-quantity" class="block mb-2 text-sm text-gray-700">Quantité</label><input type="number" step="0.01" id="material-quantity" required class="form-input w-full rounded-lg p-2"></div><div><label for="material-unit" class="block mb-2 text-sm text-gray-700">Unité</label><select id="material-unit" required class="form-select w-full rounded-lg p-2"><option value="tonnes">tonnes</option><option value="kg">kg</option><option value="m³">m³</option></select></div><div><label for="material-price" class="block mb-2 text-sm text-gray-700">Prix (€)</label><input type="number" step="0.01" id="material-price" required class="form-input w-full rounded-lg p-2"></div><div><label for="material-location" class="block mb-2 text-sm text-gray-700">Localisation</label><input type="text" id="material-location" required class="form-input w-full rounded-lg p-2"></div></div><div class="mt-8 flex justify-end"><button id="submit-material-btn" type="submit" class="btn-primary font-bold py-3 px-8 rounded-full w-48 text-center flex items-center justify-center"><span class="btn-text">Mettre en vente</span><span class="btn-spinner hidden ml-2"><i class="fas fa-spinner spinner"></i></span></button></div><p id="sell-form-error" class="text-red-500 mt-4 text-right"></p></form></div></div>
+        <div id="login-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center p-4 modal-backdrop"><div class="bg-white rounded-lg shadow-2xl p-8 w-full max-w-md modal-content"><div class="flex justify-between items-center mb-6"><h2 class="text-2xl font-bold text-gray-800">Connexion</h2><button class="close-modal-btn text-gray-400 hover:text-gray-800 text-2xl">&times;</button></div><form id="login-form"><div class="space-y-4"><div><label for="login-email" class="block mb-2 text-sm">Email</label><input type="email" id="login-email" required class="form-input w-full rounded-lg p-2"></div><div><label for="login-password" class="block mb-2 text-sm">Mot de passe</label><input type="password" id="login-password" required class="form-input w-full rounded-lg p-2"></div></div><div class="mt-8"><button type="submit" class="btn-primary font-bold py-3 px-8 rounded-full w-full">Se connecter</button></div><p id="login-error" class="text-red-500 mt-4 text-center"></p></form></div></div>
+        <div id="register-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center p-4 modal-backdrop"><div class="bg-white rounded-lg shadow-2xl p-8 w-full max-w-md modal-content"><div class="flex justify-between items-center mb-6"><h2 class="text-2xl font-bold text-gray-800">Créer un compte</h2><button class="close-modal-btn text-gray-400 hover:text-gray-800 text-2xl">&times;</button></div><form id="register-form"><div class="space-y-4"><div><label for="register-name" class="block mb-2 text-sm">Nom ou Entreprise</label><input type="text" id="register-name" required class="form-input w-full rounded-lg p-2"></div><div><label for="register-email" class="block mb-2 text-sm">Email</label><input type="email" id="register-email" required class="form-input w-full rounded-lg p-2"></div><div><label for="register-password" class="block mb-2 text-sm">Mot de passe (6+ car.)</label><input type="password" id="register-password" required class="form-input w-full rounded-lg p-2"></div></div><div class="mt-8"><button type="submit" class="btn-primary font-bold py-3 px-8 rounded-full w-full">S'inscrire</button></div><p id="register-error" class="text-red-500 mt-4 text-center"></p></form></div></div>
         <div id="account-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center p-4 modal-backdrop"></div>
-        <!-- Message Modal -->
-        <div id="message-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center p-4 modal-backdrop">
-            <div class="bg-white rounded-lg shadow-2xl p-8 w-full max-w-md modal-content text-center">
-                <h2 id="message-modal-title" class="text-2xl font-bold mb-4 text-gray-800"></h2>
-                <p id="message-modal-text" class="mb-6 text-gray-600"></p>
-                <div class="flex justify-center gap-4">
-                    <button class="close-modal-btn btn-primary font-bold py-2 px-6 rounded-full">OK</button>
-                </div>
-            </div>
-        </div>
+        <div id="message-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center p-4 modal-backdrop"><div class="bg-white rounded-lg shadow-2xl p-8 w-full max-w-md modal-content text-center"><h2 id="message-modal-title" class="text-2xl font-bold mb-4 text-gray-800"></h2><p id="message-modal-text" class="mb-6 text-gray-600"></p><div class="flex justify-center"><button class="close-modal-btn btn-primary font-bold py-2 px-6 rounded-full">OK</button></div></div></div>
     </div>
 
     <!-- Scripts -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getFirestore, collection, onSnapshot, addDoc, doc, getDoc, setDoc, query, where, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, onSnapshot, addDoc, doc, getDoc, setDoc, query, where, getDocs, serverTimestamp, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        // import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-functions.js";
-
-        // ===================================================================================
-        // ==!> VÉRIFICATION CRITIQUE DE LA CONFIGURATION <!==
-        // ===================================================================================
+        
         const firebaseConfig = {
           apiKey: "AIzaSyB0tQRqJaOgqIi7Sbk0v1JPJZbSabzMmBo",
           authDomain: "greenecogenius.firebaseapp.com",
@@ -168,23 +122,12 @@
           storageBucket: "greenecogenius.firebasestorage.app",
           messagingSenderId: "201115761499",
           appId: "1:201115761499:web:87f9961ff40f8a5e04387e",
-          measurementId: "G-LNSR09QLWD"
         };
         const appId = "greenecogenius";
 
-        // ===================================================================================
-        // APPLICATION STATE & UI ELEMENTS
-        // ===================================================================================
-        const state = {
-            allMaterials: [],
-            filteredMaterials: [],
-            currentUser: null,
-            currentUserData: {},
-            marketChart: null
-        };
+        const state = { allMaterials: [], currentUser: null, currentUserData: {}, marketChart: null };
         const UI = {
             grid: document.getElementById('materials-grid'),
-            loadingContainer: document.getElementById('loading-container'),
             chartCanvas: document.getElementById('market-chart'),
             searchInput: document.getElementById('search-input'),
             categoryFilter: document.getElementById('category-filter'),
@@ -194,206 +137,175 @@
             accountMenuBtn: document.getElementById('account-menu-btn'),
         };
 
-        function displayError(errorMessage, details = '') {
-            UI.grid.innerHTML = `<div class="col-span-full error-message-box">
-                <h3 class="font-bold text-lg">Oops ! Une erreur est survenue.</h3>
-                <p class="mt-2">${errorMessage}</p>
-                <p class="mt-2 text-sm font-mono bg-yellow-100 p-2 rounded">${details}</p>
-                <p class="mt-4"><b>Vérifications :</b></p>
-                <ol class="list-decimal list-inside text-sm">
-                    <li>La <b>firebaseConfig</b> dans le code est-elle 100% correcte ?</li>
-                    <li>Le domaine <b>${window.location.hostname}</b> est-il bien dans les "Domaines autorisés" de Firebase Auth ?</li>
-                    <li>Les <b>Règles Firestore</b> sont-elles bien publiées et correctes ?</li>
-                </ol>
-            </div>`;
-        }
+        function displayError(msg, details = '') { UI.grid.innerHTML = `<div class="col-span-full error-message-box"><h3 class="font-bold text-lg">Oops! Une erreur est survenue.</h3><p class="mt-2">${msg}</p><p class="mt-2 text-sm font-mono bg-yellow-100 p-2 rounded">${details}</p></div>`; }
+        function toggleModal(modalId, show) { const modal = document.getElementById(modalId); if (modal) modal.classList.toggle('hidden', !show); }
+        function showMessage(title, text) { document.getElementById('message-modal-title').textContent = title; document.getElementById('message-modal-text').textContent = text; toggleModal('message-modal', true); }
 
-        // ===================================================================================
-        // INITIALISATION
-        // ===================================================================================
         try {
             const app = initializeApp(firebaseConfig);
             const db = getFirestore(app);
             const auth = getAuth(app);
-            // const functions = getFunctions(app, 'europe-west1');
-            
             main(db, auth);
-
         } catch (error) {
-            console.error("Erreur critique d'initialisation de Firebase: ", error);
-            displayError("La configuration de Firebase semble incorrecte.", `Message: ${error.message}.`);
+            console.error("Firebase Init Error:", error);
+            displayError("La configuration de Firebase est incorrecte.", `Message: ${error.message}.`);
         }
         
-        // ===================================================================================
-        // CORE APPLICATION LOGIC
-        // ===================================================================================
         function main(db, auth) {
             const materialsCol = collection(db, 'artifacts', appId, 'public', 'data', 'materials');
+            const usersCol = collection(db, 'artifacts', appId, 'users');
 
-            // --- DATA LISTENER ---
             onSnapshot(materialsCol, (snapshot) => {
                 state.allMaterials = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 filterAndDisplay();
             }, (error) => {
-                console.error("Erreur Firestore (onSnapshot): ", error);
                 displayError("Impossible de lire la base de données.", `Message: ${error.message}.`);
             });
 
-            // --- AUTH LISTENER ---
             onAuthStateChanged(auth, async (user) => {
                 if (user) {
                     state.currentUser = user;
-                    const userRef = doc(db, 'artifacts', appId, 'users', user.uid);
-                    const userDoc = await getDoc(userRef);
+                    const userDoc = await getDoc(doc(usersCol, user.uid));
                     state.currentUserData = userDoc.exists() ? userDoc.data() : {};
-                    
                     const name = state.currentUserData.name || '';
                     UI.accountMenuBtn.textContent = name ? name[0].toUpperCase() : '👤';
                     UI.loggedOutView.classList.add('hidden');
                     UI.loggedInView.classList.remove('hidden');
                 } else {
-                    state.currentUser = null;
-                    state.currentUserData = {};
-                    UI.loggedOutView.classList.remove('hidden');
-                    UI.loggedInView.classList.add('hidden');
+                    state.currentUser = null; state.currentUserData = {};
+                    UI.loggedOutView.classList.remove('hidden'); UI.loggedInView.classList.add('hidden');
                 }
-                filterAndDisplay(); // Re-render materials with correct auth state
+                filterAndDisplay();
             });
-            
-            // --- EVENT LISTENERS ---
-            UI.searchInput.addEventListener('input', filterAndDisplay);
-            UI.categoryFilter.addEventListener('change', filterAndDisplay);
-            UI.countryFilter.addEventListener('change', filterAndDisplay);
-            
-            // Simplified global click handler
-            document.body.addEventListener('click', (e) => {
-                const target = e.target;
-                const dropdownMenu = document.getElementById('account-dropdown-menu');
 
-                if (target.closest('[data-modal-target]')) {
-                    toggleModal(target.closest('[data-modal-target]').dataset.modalTarget, true);
-                }
-                if (target.closest('.close-modal-btn')) {
-                    toggleModal(target.closest('.modal-backdrop').id, false);
-                }
-                if (target.closest('#account-menu-btn')) {
-                    dropdownMenu.classList.toggle('hidden');
-                } else if (!target.closest('.dropdown')) {
-                    dropdownMenu.classList.add('hidden');
-                }
-                if (target.closest('#logout-btn')) {
-                    signOut(auth);
-                    dropdownMenu.classList.add('hidden');
-                }
-            });
+            setupEventListeners(db, auth);
         }
         
-        function filterAndDisplay() {
-            const search = UI.searchInput.value.toLowerCase();
-            const category = UI.categoryFilter.value;
-            const country = UI.countryFilter.value;
-
-            state.filteredMaterials = state.allMaterials.filter(material => {
-                const countryMatch = country === 'all' || (material.location || '').toLowerCase().includes(country.toLowerCase());
-                const categoryMatch = category === 'all' || material.category === category;
-                const supplierInfo = material.supplierName || '';
-                const searchMatch = search === '' || (material.name || '').toLowerCase().includes(search) || supplierInfo.toLowerCase().includes(search);
-                return countryMatch && categoryMatch && searchMatch;
+        function setupEventListeners(db, auth) {
+            ['input', 'change'].forEach(evt => {
+                UI.searchInput.addEventListener(evt, filterAndDisplay);
+                UI.categoryFilter.addEventListener(evt, filterAndDisplay);
+                UI.countryFilter.addEventListener(evt, filterAndDisplay);
             });
-            
-            renderMaterials(state.filteredMaterials);
-            updateMarketChart(state.filteredMaterials);
+
+            document.body.addEventListener('click', (e) => {
+                const target = e.target;
+                if (target.closest('[data-modal-target]')) toggleModal(target.closest('[data-modal-target]').dataset.modalTarget, true);
+                if (target.closest('.close-modal-btn')) toggleModal(target.closest('.modal-backdrop').id, false);
+                if (target.closest('#account-menu-btn')) document.getElementById('account-dropdown-menu').classList.toggle('hidden');
+                else if (!target.closest('.dropdown')) document.getElementById('account-dropdown-menu').classList.add('hidden');
+                if (target.closest('#logout-btn')) { signOut(auth); document.getElementById('account-dropdown-menu').classList.add('hidden'); }
+                if (target.closest('#open-account-btn')) { openAccountModal(db); document.getElementById('account-dropdown-menu').classList.add('hidden'); }
+                if (target.closest('[data-buy-id]')) { buyMaterial(db, target.closest('[data-buy-id]').dataset.buyId); }
+            });
+
+            document.getElementById('register-form').addEventListener('submit', async e => {
+                e.preventDefault();
+                const name = e.target['register-name'].value, email = e.target['register-email'].value, password = e.target['register-password'].value;
+                try {
+                    const cred = await createUserWithEmailAndPassword(auth, email, password);
+                    await setDoc(doc(db, 'artifacts', appId, 'users', cred.user.uid), { name, email, createdAt: serverTimestamp() });
+                    toggleModal('register-modal', false); e.target.reset();
+                } catch (error) { document.getElementById('register-error').textContent = 'Erreur: Email déjà utilisé ou mot de passe invalide.'; }
+            });
+
+            document.getElementById('login-form').addEventListener('submit', async e => {
+                e.preventDefault();
+                const email = e.target['login-email'].value, password = e.target['login-password'].value;
+                try {
+                    await signInWithEmailAndPassword(auth, email, password);
+                    toggleModal('login-modal', false); e.target.reset();
+                } catch (error) { document.getElementById('login-error').textContent = 'Email ou mot de passe incorrect.'; }
+            });
+
+            document.getElementById('add-material-form').addEventListener('submit', async e => {
+                e.preventDefault();
+                if (!state.currentUser) return;
+                const form = e.target;
+                const newMaterial = {
+                    name: form['material-name'].value, category: form['material-category'].value, quantity: parseFloat(form['material-quantity'].value),
+                    unit: form['material-unit'].value, price: parseFloat(form['material-price'].value), location: form['material-location'].value,
+                    sellerId: state.currentUser.uid, supplierName: state.currentUserData.name || 'Anonyme', createdAt: serverTimestamp()
+                };
+                try {
+                    await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'materials'), newMaterial);
+                    toggleModal('sell-material-modal', false); form.reset();
+                } catch (error) { document.getElementById('sell-form-error').textContent = 'Erreur lors de l\'ajout du lot.'; }
+            });
+        }
+
+        function filterAndDisplay() {
+            const search = UI.searchInput.value.toLowerCase(), category = UI.categoryFilter.value, country = UI.countryFilter.value;
+            const materials = state.allMaterials.filter(m => 
+                (country === 'all' || (m.location || '').toLowerCase().includes(country.toLowerCase())) &&
+                (category === 'all' || m.category === category) &&
+                (search === '' || (m.name || '').toLowerCase().includes(search) || (m.supplierName || '').toLowerCase().includes(search))
+            );
+            renderMaterials(materials);
+            updateMarketChart(materials);
         }
 
         function renderMaterials(materials) {
             UI.grid.innerHTML = '';
-            if (materials.length === 0) {
-                 UI.grid.innerHTML = '<p class="col-span-full text-center text-gray-500">Aucun matériau ne correspond à votre recherche.</p>';
-                 return;
-            }
-
+            if (materials.length === 0) { UI.grid.innerHTML = '<p class="col-span-full text-center text-gray-500 p-8">Aucun matériau ne correspond à votre recherche.</p>'; return; }
             const co2Factors = { "Plastiques": 2100, "Métaux": 6500, "Papiers/Cartons": 800, "Verre": 400, "Bois": 50 };
-            materials.forEach(material => {
+            materials.forEach(m => {
                 const card = document.createElement('div');
-                card.className = 'bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden flex flex-col justify-between transform hover:-translate-y-1 transition duration-300 fade-in';
-                const isOwner = state.currentUser && material.sellerId === state.currentUser.uid;
-                const supplierInfo = material.supplierName || 'N/A';
-                const quantityInTons = material.unit === 'tonnes' ? (material.quantity || 0) : (material.quantity || 0) / 1000;
-                const co2Saved = ( (co2Factors[material.category] || 0) * quantityInTons).toFixed(0);
-                
-                let actionButtonHTML;
-                if (!state.currentUser) {
-                    actionButtonHTML = `<button class="bg-gray-200 text-gray-500 font-bold py-2 px-4 rounded-full w-full cursor-not-allowed text-sm" disabled>Connectez-vous pour acheter</button>`;
-                } else if (isOwner) {
-                    actionButtonHTML = `<div class="tag-own text-center font-bold py-2 px-4 rounded-full w-full text-sm">Votre lot</div>`;
-                } else {
-                    actionButtonHTML = `<button data-buy-id="${material.id}" class="btn-primary font-bold py-2 px-4 rounded-full w-full transition-colors text-sm">Acheter ce lot</button>`;
-                }
-
-                card.innerHTML = `
-                    <div>
-                        <img src="https://placehold.co/600x400/14B8A6/FFFFFF?text=${encodeURIComponent(material.category)}" alt="${material.name}" class="w-full h-40 object-cover">
-                        <div class="p-4">
-                            <span class="tag text-xs font-semibold py-1 px-3 rounded-full">${material.category}</span>
-                            <h3 class="text-lg font-bold mt-3 text-gray-800">${material.name}</h3>
-                            <p class="text-sm mt-2 text-gray-600"><i class="fas fa-user mr-2 text-gray-400"></i>${supplierInfo}</p>
-                            <p class="text-sm mt-1 text-gray-600"><i class="fas fa-map-marker-alt mr-2 text-gray-400"></i>${material.location}</p>
-                            <div class="mt-4 flex justify-between items-center">
-                                <div><p class="text-sm font-semibold text-gray-800">${material.quantity} ${material.unit}</p><p class="text-xs text-gray-500">disponibles</p></div>
-                                <div class="text-right"><p class="text-lg font-bold text-[var(--color-accent)]">${new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(material.price || 0)}</p><p class="text-xs text-gray-500">par ${material.unit}</p></div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="p-4 bg-gray-50 border-t"><p class="text-sm font-semibold text-[var(--color-accent)] flex items-center justify-center"><i class="fas fa-leaf mr-2"></i>Économie estimée: ${co2Saved} kg CO₂</p></div>
-                    <div class="p-4 bg-gray-50">${actionButtonHTML}</div>`;
+                card.className = 'bg-white border border-gray-200 rounded-lg shadow-sm flex flex-col justify-between fade-in';
+                const isOwner = state.currentUser && m.sellerId === state.currentUser.uid;
+                const saved = ((co2Factors[m.category] || 0) * (m.unit === 'tonnes' ? m.quantity : m.quantity / 1000)).toFixed(0);
+                let btn = `<button class="bg-gray-200 text-gray-500 font-bold py-2 px-4 rounded-full w-full text-sm" disabled>Connectez-vous</button>`;
+                if (state.currentUser) btn = isOwner ? `<div class="tag-own text-center font-bold py-2 px-4 rounded-full w-full text-sm">Votre lot</div>` : `<button data-buy-id="${m.id}" class="btn-primary font-bold py-2 px-4 rounded-full w-full text-sm">Acheter ce lot</button>`;
+                card.innerHTML = `<div><img src="https://placehold.co/600x400/14B8A6/FFFFFF?text=${encodeURIComponent(m.category)}" alt="${m.name}" class="w-full h-40 object-cover"><div class="p-4"><span class="tag text-xs py-1 px-3 rounded-full">${m.category}</span><h3 class="text-lg font-bold mt-3">${m.name}</h3><p class="text-sm mt-2 text-gray-600"><i class="fas fa-user mr-2 text-gray-400"></i>${m.supplierName || 'N/A'}</p><p class="text-sm mt-1 text-gray-600"><i class="fas fa-map-marker-alt mr-2 text-gray-400"></i>${m.location}</p><div class="mt-4 flex justify-between items-center"><div><p class="text-sm font-semibold">${m.quantity} ${m.unit}</p></div><div class="text-right"><p class="text-lg font-bold text-[var(--color-accent)]">${new Intl.NumberFormat('fr-FR',{style:'currency',currency:'EUR'}).format(m.price||0)}</p></div></div></div></div><div class="p-4 bg-gray-50 border-t"><p class="text-sm font-semibold text-[var(--color-accent)] flex items-center justify-center"><i class="fas fa-leaf mr-2"></i>Économie: ${saved} kg CO₂</p></div><div class="p-4 bg-gray-50">${btn}</div>`;
                 UI.grid.appendChild(card);
             });
         }
 
         function updateMarketChart(materials) {
-            const categoryCounts = materials.reduce((acc, material) => {
-                acc[material.category] = (acc[material.category] || 0) + 1;
-                return acc;
-            }, {});
-
-            const labels = Object.keys(categoryCounts);
-            const data = Object.values(categoryCounts);
-            const backgroundColors = ['#14B8A6', '#2A833D', '#0d9488', '#84E197', '#C1F0F6'];
-
+            const counts = materials.reduce((a, m) => { a[m.category] = (a[m.category] || 0) + 1; return a; }, {});
+            const labels = Object.keys(counts), data = Object.values(counts);
+            const colors = ['#14B8A6', '#2A833D', '#0d9488', '#84E197', '#C1F0F6'];
             if (state.marketChart) {
                 state.marketChart.data.labels = labels;
                 state.marketChart.data.datasets[0].data = data;
-                state.marketChart.data.datasets[0].backgroundColor = backgroundColors.slice(0, labels.length);
+                state.marketChart.data.datasets[0].backgroundColor = colors.slice(0, labels.length);
                 state.marketChart.update();
             } else {
-                state.marketChart = new Chart(UI.chartCanvas, {
-                    type: 'doughnut',
-                    data: {
-                        labels: labels,
-                        datasets: [{
-                            label: 'Lots par catégorie',
-                            data: data,
-                            backgroundColor: backgroundColors,
-                            borderWidth: 2,
-                            borderColor: 'var(--color-bg-alt)',
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: { position: 'bottom', labels: { font: { family: 'Poppins' }, boxWidth: 12 } }
-                        },
-                        cutout: '60%'
-                    }
-                });
+                state.marketChart = new Chart(UI.chartCanvas, { type: 'doughnut', data: { labels, datasets: [{ data, backgroundColor: colors, borderWidth: 2, borderColor: 'var(--color-bg-alt)' }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { font: { family: 'Poppins' }, boxWidth: 12 } } }, cutout: '60%' } });
             }
         }
+        
+        async function openAccountModal(db) {
+            if(!state.currentUser) return;
+            const uid = state.currentUser.uid;
+            let salesHTML = `<div class="p-2 text-center text-gray-500">Aucun lot en vente.</div>`;
+            let purchasesHTML = `<div class="p-2 text-center text-gray-500">Aucun achat réalisé.</div>`;
+            try {
+                const salesQ = query(collection(db, 'artifacts', appId, 'public', 'data', 'materials'), where("sellerId", "==", uid));
+                const salesSnap = await getDocs(salesQ);
+                if(!salesSnap.empty) salesHTML = salesSnap.docs.map(d => `<div class="p-3 bg-gray-50 border rounded-lg flex justify-between"><span>${d.data().name}</span><span class="font-bold">${new Intl.NumberFormat('fr-FR',{style:'currency',currency:'EUR'}).format(d.data().price)}</span></div>`).join('');
+                
+                // Note: La requête sur 'purchases' nécessitera un index composite dans Firestore.
+                const purchasesQ = query(collection(db, 'artifacts', appId, 'public', 'data', 'purchases'), where("buyerId", "==", uid));
+                const purchasesSnap = await getDocs(purchasesQ);
+                if(!purchasesSnap.empty) purchasesHTML = purchasesSnap.docs.map(d => `<div class="p-3 bg-gray-50 border rounded-lg flex justify-between"><span>${d.data().name} (de ${d.data().supplierName})</span><span class="font-bold">${new Intl.NumberFormat('fr-FR',{style:'currency',currency:'EUR'}).format(d.data().price)}</span></div>`).join('');
 
-        function toggleModal(modalId, show) {
-            const modal = document.getElementById(modalId);
-            if (modal) modal.classList.toggle('hidden', !show);
+            } catch(e) {
+                console.error("Erreur de requête (index manquant?):", e.message);
+                salesHTML = `<div class="p-2 text-center text-red-600">Erreur au chargement des ventes. Un index Firestore est peut-être requis.</div>`;
+            }
+            const modalHTML = `<div class="bg-white rounded-lg shadow-2xl p-8 w-full max-w-3xl modal-content max-h-[80vh] overflow-y-auto"><div class="flex justify-between items-center mb-6"><h2 class="text-2xl font-bold text-gray-800">Mon Compte</h2><button class="close-modal-btn text-gray-400 hover:text-gray-800 text-2xl">&times;</button></div><div class="space-y-6"><div><h3 class="font-bold text-xl mb-2 border-b pb-2">Mes Ventes</h3><div class="space-y-2">${salesHTML}</div></div><div><h3 class="font-bold text-xl mb-2 border-b pb-2">Mes Achats</h3><div class="space-y-2">${purchasesHTML}</div></div></div></div>`;
+            document.getElementById('account-modal').innerHTML = modalHTML;
+            toggleModal('account-modal', true);
         }
+
+        function buyMaterial(db, materialId) {
+            // Pour l'instant, cette fonction affiche un message.
+            // La logique Stripe (via Cloud Functions) sera ajoutée ici.
+            const material = state.allMaterials.find(m => m.id === materialId);
+            showMessage("Achat (Simulation)", `Vous êtes sur le point d'acheter le lot : "${material.name}". Cette fonctionnalité sera bientôt connectée à un système de paiement.`);
+        }
+
     </script>
 </body>
 </html>
