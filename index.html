@@ -17,7 +17,7 @@
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
-    <!-- Stripe.js (pour le futur) -->
+    <!-- Stripe.js -->
     <script src="https://js.stripe.com/v3/"></script>
 
     <style>
@@ -101,7 +101,6 @@
     
     <!-- Modals -->
     <div id="modal-container">
-        <!-- All modals will be injected here by JS or defined statically -->
         <div id="sell-material-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center p-4 modal-backdrop"><div class="bg-white rounded-lg shadow-2xl p-8 w-full max-w-2xl modal-content"><div class="flex justify-between items-center mb-6"><h2 class="text-2xl font-bold text-gray-800">Vendre un nouveau lot</h2><button class="close-modal-btn text-gray-400 hover:text-gray-800 text-2xl">&times;</button></div><form id="add-material-form" class="space-y-4"><div class="grid grid-cols-1 md:grid-cols-2 gap-4"><div><label for="material-name" class="block mb-2 text-sm text-gray-700">Nom du matériau</label><input type="text" id="material-name" required class="form-input w-full rounded-lg p-2"></div><div><label for="material-category" class="block mb-2 text-sm text-gray-700">Catégorie</label><select id="material-category" required class="form-select w-full rounded-lg p-2"><option value="Plastiques">Plastiques</option><option value="Métaux">Métaux</option><option value="Papiers/Cartons">Papiers/Cartons</option><option value="Verre">Verre</option><option value="Bois">Bois</option></select></div><div><label for="material-quantity" class="block mb-2 text-sm text-gray-700">Quantité</label><input type="number" step="0.01" id="material-quantity" required class="form-input w-full rounded-lg p-2"></div><div><label for="material-unit" class="block mb-2 text-sm text-gray-700">Unité</label><select id="material-unit" required class="form-select w-full rounded-lg p-2"><option value="tonnes">tonnes</option><option value="kg">kg</option><option value="m³">m³</option></select></div><div><label for="material-price" class="block mb-2 text-sm text-gray-700">Prix (€)</label><input type="number" step="0.01" id="material-price" required class="form-input w-full rounded-lg p-2"></div><div><label for="material-location" class="block mb-2 text-sm text-gray-700">Localisation</label><input type="text" id="material-location" required class="form-input w-full rounded-lg p-2"></div></div><div class="mt-8 flex justify-end"><button id="submit-material-btn" type="submit" class="btn-primary font-bold py-3 px-8 rounded-full w-48 text-center flex items-center justify-center"><span class="btn-text">Mettre en vente</span><span class="btn-spinner hidden ml-2"><i class="fas fa-spinner spinner"></i></span></button></div><p id="sell-form-error" class="text-red-500 mt-4 text-right"></p></form></div></div>
         <div id="login-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center p-4 modal-backdrop"><div class="bg-white rounded-lg shadow-2xl p-8 w-full max-w-md modal-content"><div class="flex justify-between items-center mb-6"><h2 class="text-2xl font-bold text-gray-800">Connexion</h2><button class="close-modal-btn text-gray-400 hover:text-gray-800 text-2xl">&times;</button></div><form id="login-form"><div class="space-y-4"><div><label for="login-email" class="block mb-2 text-sm">Email</label><input type="email" id="login-email" required class="form-input w-full rounded-lg p-2"></div><div><label for="login-password" class="block mb-2 text-sm">Mot de passe</label><input type="password" id="login-password" required class="form-input w-full rounded-lg p-2"></div></div><div class="mt-8"><button type="submit" class="btn-primary font-bold py-3 px-8 rounded-full w-full">Se connecter</button></div><p id="login-error" class="text-red-500 mt-4 text-center"></p></form></div></div>
         <div id="register-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center p-4 modal-backdrop"><div class="bg-white rounded-lg shadow-2xl p-8 w-full max-w-md modal-content"><div class="flex justify-between items-center mb-6"><h2 class="text-2xl font-bold text-gray-800">Créer un compte</h2><button class="close-modal-btn text-gray-400 hover:text-gray-800 text-2xl">&times;</button></div><form id="register-form"><div class="space-y-4"><div><label for="register-name" class="block mb-2 text-sm">Nom ou Entreprise</label><input type="text" id="register-name" required class="form-input w-full rounded-lg p-2"></div><div><label for="register-email" class="block mb-2 text-sm">Email</label><input type="email" id="register-email" required class="form-input w-full rounded-lg p-2"></div><div><label for="register-password" class="block mb-2 text-sm">Mot de passe (6+ car.)</label><input type="password" id="register-password" required class="form-input w-full rounded-lg p-2"></div></div><div class="mt-8"><button type="submit" class="btn-primary font-bold py-3 px-8 rounded-full w-full">S'inscrire</button></div><p id="register-error" class="text-red-500 mt-4 text-center"></p></form></div></div>
@@ -112,8 +111,9 @@
     <!-- Scripts -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getFirestore, collection, onSnapshot, addDoc, doc, getDoc, setDoc, query, where, getDocs, serverTimestamp, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, onSnapshot, addDoc, doc, getDoc, setDoc, query, where, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-functions.js";
         
         const firebaseConfig = {
           apiKey: "AIzaSyB0tQRqJaOgqIi7Sbk0v1JPJZbSabzMmBo",
@@ -125,7 +125,7 @@
         };
         const appId = "greenecogenius";
 
-        const state = { allMaterials: [], currentUser: null, currentUserData: {}, marketChart: null };
+        const state = { allMaterials: [], currentUser: null, currentUserData: {}, marketChart: null, stripe: null };
         const UI = {
             grid: document.getElementById('materials-grid'),
             chartCanvas: document.getElementById('market-chart'),
@@ -145,22 +145,28 @@
             const app = initializeApp(firebaseConfig);
             const db = getFirestore(app);
             const auth = getAuth(app);
-            main(db, auth);
+            const functions = getFunctions(app, 'europe-west1');
+            
+            // =======================================================================
+            // ==!> ÉTAPE FINALE : Mettez votre clé PUBLIABLE Stripe ici           <!==
+            // (Celle qui commence par pk_test_...)
+            // =======================================================================
+            state.stripe = Stripe("pk_live_51QX472EQ2HzlC8beUZFQgGAedJISvEr0iFCQCPh5PVKKPyyDe9qYDB0UmeiMCCSKhXiaCkfepRYbi5GNUAbH5H0N009mu6mHaG");
+
+            main(db, auth, functions);
         } catch (error) {
-            console.error("Firebase Init Error:", error);
-            displayError("La configuration de Firebase est incorrecte.", `Message: ${error.message}.`);
+            console.error("Firebase/Stripe Init Error:", error);
+            displayError("La configuration de Firebase ou Stripe est incorrecte.", `Message: ${error.message}.`);
         }
         
-        function main(db, auth) {
+        function main(db, auth, functions) {
             const materialsCol = collection(db, 'artifacts', appId, 'public', 'data', 'materials');
             const usersCol = collection(db, 'artifacts', appId, 'users');
 
             onSnapshot(materialsCol, (snapshot) => {
                 state.allMaterials = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 filterAndDisplay();
-            }, (error) => {
-                displayError("Impossible de lire la base de données.", `Message: ${error.message}.`);
-            });
+            }, (error) => displayError("Impossible de lire la base de données.", `Message: ${error.message}.`));
 
             onAuthStateChanged(auth, async (user) => {
                 if (user) {
@@ -178,10 +184,10 @@
                 filterAndDisplay();
             });
 
-            setupEventListeners(db, auth);
+            setupEventListeners(db, auth, functions);
         }
         
-        function setupEventListeners(db, auth) {
+        function setupEventListeners(db, auth, functions) {
             ['input', 'change'].forEach(evt => {
                 UI.searchInput.addEventListener(evt, filterAndDisplay);
                 UI.categoryFilter.addEventListener(evt, filterAndDisplay);
@@ -196,7 +202,7 @@
                 else if (!target.closest('.dropdown')) document.getElementById('account-dropdown-menu').classList.add('hidden');
                 if (target.closest('#logout-btn')) { signOut(auth); document.getElementById('account-dropdown-menu').classList.add('hidden'); }
                 if (target.closest('#open-account-btn')) { openAccountModal(db); document.getElementById('account-dropdown-menu').classList.add('hidden'); }
-                if (target.closest('[data-buy-id]')) { buyMaterial(db, target.closest('[data-buy-id]').dataset.buyId); }
+                if (target.closest('[data-buy-id]')) { buyMaterial(functions, target.closest('[data-buy-id]').dataset.buyId); }
             });
 
             document.getElementById('register-form').addEventListener('submit', async e => {
@@ -236,11 +242,7 @@
 
         function filterAndDisplay() {
             const search = UI.searchInput.value.toLowerCase(), category = UI.categoryFilter.value, country = UI.countryFilter.value;
-            const materials = state.allMaterials.filter(m => 
-                (country === 'all' || (m.location || '').toLowerCase().includes(country.toLowerCase())) &&
-                (category === 'all' || m.category === category) &&
-                (search === '' || (m.name || '').toLowerCase().includes(search) || (m.supplierName || '').toLowerCase().includes(search))
-            );
+            const materials = state.allMaterials.filter(m => (country === 'all' || (m.location || '').toLowerCase().includes(country.toLowerCase())) && (category === 'all' || m.category === category) && (search === '' || (m.name || '').toLowerCase().includes(search) || (m.supplierName || '').toLowerCase().includes(search)));
             renderMaterials(materials);
             updateMarketChart(materials);
         }
@@ -277,35 +279,43 @@
         
         async function openAccountModal(db) {
             if(!state.currentUser) return;
-            const uid = state.currentUser.uid;
             let salesHTML = `<div class="p-2 text-center text-gray-500">Aucun lot en vente.</div>`;
             let purchasesHTML = `<div class="p-2 text-center text-gray-500">Aucun achat réalisé.</div>`;
             try {
-                const salesQ = query(collection(db, 'artifacts', appId, 'public', 'data', 'materials'), where("sellerId", "==", uid));
+                const salesQ = query(collection(db, 'artifacts', appId, 'public', 'data', 'materials'), where("sellerId", "==", state.currentUser.uid));
                 const salesSnap = await getDocs(salesQ);
                 if(!salesSnap.empty) salesHTML = salesSnap.docs.map(d => `<div class="p-3 bg-gray-50 border rounded-lg flex justify-between"><span>${d.data().name}</span><span class="font-bold">${new Intl.NumberFormat('fr-FR',{style:'currency',currency:'EUR'}).format(d.data().price)}</span></div>`).join('');
                 
-                // Note: La requête sur 'purchases' nécessitera un index composite dans Firestore.
-                const purchasesQ = query(collection(db, 'artifacts', appId, 'public', 'data', 'purchases'), where("buyerId", "==", uid));
+                const purchasesQ = query(collection(db, 'artifacts', appId, 'public', 'data', 'purchases'), where("buyerId", "==", state.currentUser.uid));
                 const purchasesSnap = await getDocs(purchasesQ);
                 if(!purchasesSnap.empty) purchasesHTML = purchasesSnap.docs.map(d => `<div class="p-3 bg-gray-50 border rounded-lg flex justify-between"><span>${d.data().name} (de ${d.data().supplierName})</span><span class="font-bold">${new Intl.NumberFormat('fr-FR',{style:'currency',currency:'EUR'}).format(d.data().price)}</span></div>`).join('');
 
-            } catch(e) {
-                console.error("Erreur de requête (index manquant?):", e.message);
-                salesHTML = `<div class="p-2 text-center text-red-600">Erreur au chargement des ventes. Un index Firestore est peut-être requis.</div>`;
-            }
-            const modalHTML = `<div class="bg-white rounded-lg shadow-2xl p-8 w-full max-w-3xl modal-content max-h-[80vh] overflow-y-auto"><div class="flex justify-between items-center mb-6"><h2 class="text-2xl font-bold text-gray-800">Mon Compte</h2><button class="close-modal-btn text-gray-400 hover:text-gray-800 text-2xl">&times;</button></div><div class="space-y-6"><div><h3 class="font-bold text-xl mb-2 border-b pb-2">Mes Ventes</h3><div class="space-y-2">${salesHTML}</div></div><div><h3 class="font-bold text-xl mb-2 border-b pb-2">Mes Achats</h3><div class="space-y-2">${purchasesHTML}</div></div></div></div>`;
+            } catch(e) { salesHTML = `<div class="p-2 text-center text-red-600">Erreur au chargement. Un index Firestore est peut-être requis.</div>`; }
+            const modalHTML = `<div class="bg-white rounded-lg shadow-2xl p-8 w-full max-w-3xl modal-content max-h-[80vh] overflow-y-auto"><div class="flex justify-between items-center mb-6"><h2 class="text-2xl font-bold">Mon Compte</h2><button class="close-modal-btn text-gray-400 text-2xl">&times;</button></div><div class="space-y-6"><div><h3 class="font-bold text-xl mb-2 border-b pb-2">Mes Ventes</h3><div class="space-y-2">${salesHTML}</div></div><div><h3 class="font-bold text-xl mb-2 border-b pb-2">Mes Achats</h3><div class="space-y-2">${purchasesHTML}</div></div></div></div>`;
             document.getElementById('account-modal').innerHTML = modalHTML;
             toggleModal('account-modal', true);
         }
 
-        function buyMaterial(db, materialId) {
-            // Pour l'instant, cette fonction affiche un message.
-            // La logique Stripe (via Cloud Functions) sera ajoutée ici.
-            const material = state.allMaterials.find(m => m.id === materialId);
-            showMessage("Achat (Simulation)", `Vous êtes sur le point d'acheter le lot : "${material.name}". Cette fonctionnalité sera bientôt connectée à un système de paiement.`);
+        async function buyMaterial(functions, materialId) {
+            if (!state.stripe) return showMessage("Erreur", "Stripe n'est pas initialisé.");
+            
+            try {
+                const createStripeCheckoutSession = httpsCallable(functions, 'createStripeCheckoutSession');
+                const { data } = await createStripeCheckoutSession({ materialId: materialId });
+                
+                const { error } = await state.stripe.redirectToCheckout({ sessionId: data.sessionId });
+                
+                if (error) {
+                    console.error("Erreur de redirection Stripe:", error);
+                    showMessage("Erreur de Paiement", error.message);
+                }
+            } catch (error) {
+                console.error("Erreur d'appel de la Cloud Function:", error);
+                showMessage("Erreur de Paiement", "Impossible de démarrer le paiement. Le lot n'est peut-être plus disponible ou vous essayez d'acheter votre propre lot.");
+            }
         }
 
     </script>
 </body>
 </html>
+
