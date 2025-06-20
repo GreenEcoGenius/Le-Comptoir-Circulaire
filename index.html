@@ -1,198 +1,145 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Le Comptoir Circulaire - GreenEcoGenius</title>
-    
-    <!-- Tailwind CSS & Google Fonts -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
-    <!-- Font Awesome Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" xintegrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-    
-    <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+// Authentification Firebase + Routing protégé (suite du template)
 
-    <style>
-        /* NOUVELLE PALETTE DE COULEURS - THÈME CLAIR */
-        :root {
-            --color-bg: #FFFFFF; 
-            --color-bg-alt: #f8f9fa; /* Un gris très clair pour les sections */
-            --color-card-bg: #FFFFFF;
-            --color-text: #333333;    /* Gris doux */
-            --color-text-secondary: #888888; /* Gris clair */
-            --color-primary: #8EDC3F; /* Vert clair */
-            --color-primary-darker: #7cc930;
-            --color-accent: #2A833D; /* Vert foncé */
-            --color-border: #e1e8ed;
-            --font-main: 'Poppins', sans-serif;
-        }
-        body {
-            font-family: var(--font-main);
-            background-color: var(--color-bg);
-            color: var(--color-text);
-        }
-        .tag { 
-            background-color: rgba(142, 220, 63, 0.15); /* Fond de tag basé sur le vert clair */
-            color: var(--color-accent) !important;
-            font-weight: 600;
-        }
-    </style>
-</head>
-<body class="relative">
+// Étape 1 : Configuration de Firebase
+// src/services/firebase.js
+import { initializeApp } from "firebase/app";
+import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "firebase/auth";
 
-    <header class="bg-white shadow-md sticky top-0 z-40">
-        <div class="container mx-auto px-6 py-4 flex justify-between items-center">
-            <div>
-                <h1 class="text-2xl font-bold text-gray-800">Le Comptoir Circulaire</h1>
-                <p class="text-sm text-[var(--color-text-secondary)]">Par GreenEcoGenius</p>
-            </div>
-            <div>
-                 <a href="login.html" class="bg-[var(--color-primary)] text-white font-bold py-2 px-6 rounded-full hover:bg-[var(--color-primary-darker)] transition duration-300">
-                    <i class="fas fa-plus-circle mr-2"></i>Vendre un lot
-                </a>
-            </div>
-        </div>
-    </header>
+const firebaseConfig = {
+  apiKey: "AIzaSyB0tQRqJaOgqIi7Sbk0v1JPJZbSabzMmBo",
+  authDomain: "greenecogenius.firebaseapp.com",
+  projectId: "greenecogenius",
+  storageBucket: "greenecogenius.firebasestorage.app",
+  messagingSenderId: "201115761499",
+  appId: "1:201115761499:web:87f9961ff40f8a5e04387e",
+  measurementId: "G-LNSR09QLWD"
+};
 
-    <main class="container mx-auto px-6 py-8">
-        <div class="bg-white p-6 rounded-lg shadow-sm border border-[var(--color-border)] mb-8">
-             <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                <div class="md:col-span-2 lg:col-span-2">
-                    <label for="search-input" class="block mb-2 text-sm font-medium text-gray-700">Rechercher un matériau</label>
-                    <div class="relative">
-                        <span class="absolute inset-y-0 left-0 flex items-center pl-3"><i class="fas fa-search text-gray-400"></i></span>
-                        <input type="text" id="search-input" class="w-full bg-gray-50 border border-gray-300 rounded-lg py-2 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]" placeholder="Ex: Plastique HDPE, Cuivre...">
-                    </div>
-                </div>
-                <div>
-                    <label for="category-filter" class="block mb-2 text-sm font-medium text-gray-700">Catégorie</label>
-                    <select id="category-filter" class="w-full bg-gray-50 border border-gray-300 rounded-lg py-2 px-3 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]">
-                        <option value="all">Toutes</option><option value="Plastiques">Plastiques</option><option value="Métaux">Métaux</option><option value="Papiers/Cartons">Papiers/Cartons</option><option value="Verre">Verre</option><option value="Bois">Bois</option>
-                    </select>
-                </div>
-                <div>
-                    <label for="country-filter" class="block mb-2 text-sm font-medium text-gray-700">Pays</label>
-                    <select id="country-filter" class="w-full bg-gray-50 border border-gray-300 rounded-lg py-2 px-3 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]">
-                        <option value="all">Tous</option><option value="France">France</option><option value="Allemagne">Allemagne</option><option value="Italie">Italie</option><option value="Espagne">Espagne</option>
-                    </select>
-                </div>
-            </div>
-        </div>
-        <div class="flex flex-col lg:flex-row gap-8">
-            <div class="w-full lg:w-2/3">
-                <h2 class="text-2xl font-semibold mb-4 text-gray-800">Stock disponible en temps réel</h2>
-                <div id="materials-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6 min-h-[300px]">
-                    <p id="loading-indicator" class="col-span-full text-center text-gray-500">Chargement des lots...</p>
-                </div>
-            </div>
-            <aside class="w-full lg:w-1/3">
-                <div class="bg-white p-6 rounded-lg shadow-sm border border-[var(--color-border)] sticky top-24">
-                    <h3 class="text-xl font-semibold mb-4 text-gray-800">Aperçu du Marché</h3>
-                    <div><canvas id="volumeChart"></canvas></div>
-                </div>
-            </aside>
-        </div>
-    </main>
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+export { auth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged };
 
-    <!-- Script principal -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        
-        document.addEventListener('DOMContentLoaded', function() {
-            const firebaseConfig = {
-              apiKey: "AIzaSyB0tQRqJaOgqIi7Sbk0v1JPJZbSabzMmBo",
-              authDomain: "greenecogenius.firebaseapp.com",
-              projectId: "greenecogenius",
-              storageBucket: "greenecogenius.firebasestorage.app",
-              messagingSenderId: "201115761499",
-              appId: "1:201115761499:web:87f9961ff40f8a5e04387e",
-              measurementId: "G-LNSR09QLWD"
-            };
+// Étape 2 : Hook personnalisé pour suivre l'utilisateur
+// src/hooks/useAuth.js
+import { useEffect, useState, useContext, createContext } from "react";
+import { auth, onAuthStateChanged } from "../services/firebase";
 
-            const app = initializeApp(firebaseConfig);
-            const db = getFirestore(app);
-            const appId = "greenecogenius";
-            
-            let allMaterials = [];
-            
-            const co2Factors = {
-                "Plastiques": 2100, "Métaux": 6500, "Papiers/Cartons": 800,
-                "Verre": 400, "Bois": 50
-            };
+const AuthContext = createContext(null);
 
-            const grid = document.getElementById('materials-grid');
-            const searchInput = document.getElementById('search-input');
-            const categoryFilter = document.getElementById('category-filter');
-            const countryFilter = document.getElementById('country-filter');
-            const loadingIndicator = document.getElementById('loading-indicator');
-            const chartCanvas = document.getElementById('volumeChart');
+export function AuthProvider({ children }) {
+  const [user, setUser] = useState(null);
 
-            function displayMaterials() {
-                const search = searchInput.value.toLowerCase();
-                const category = categoryFilter.value;
-                const country = countryFilter.value;
-                
-                grid.innerHTML = ''; 
-                const filtered = allMaterials.filter(material => {
-                    const countryMatch = country === 'all' || (material.location || '').toLowerCase().includes(country.toLowerCase());
-                    const categoryMatch = category === 'all' || material.category === category;
-                    const searchMatch = search === '' || (material.name || '').toLowerCase().includes(search) || (material.supplierName || '').toLowerCase().includes(search);
-                    return countryMatch && categoryMatch && searchMatch;
-                });
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, setUser);
+    return () => unsubscribe();
+  }, []);
 
-                if(filtered.length === 0) {
-                    loadingIndicator.style.display = 'block';
-                    loadingIndicator.textContent = 'Aucun matériau ne correspond à votre recherche.';
-                    return;
-                }
-                loadingIndicator.style.display = 'none';
+  return <AuthContext.Provider value={{ user }}>{children}</AuthContext.Provider>;
+}
 
-                filtered.forEach(material => {
-                    const card = document.createElement('div');
-                    card.className = 'bg-white border border-[var(--border-color)] rounded-lg shadow-sm overflow-hidden flex flex-col justify-between transform hover:-translate-y-1 transition duration-300 fade-in';
-                    const factor = co2Factors[material.category] || 0;
-                    const quantityInTons = material.unit === 'tonnes' ? (material.quantity || 0) : (material.quantity || 0) / 1000;
-                    const co2Saved = (factor * quantityInTons).toFixed(0);
+export function useAuth() {
+  return useContext(AuthContext);
+}
 
-                    card.innerHTML = `
-                        <div>
-                            <img src="https://placehold.co/600x400/8EDC3F/FFFFFF?text=${encodeURIComponent(material.category)}" alt="${material.name}" class="w-full h-40 object-cover">
-                            <div class="p-5">
-                                <span class="tag text-xs font-semibold py-1 px-3 rounded-full">${material.category}</span>
-                                <h3 class="text-lg font-bold mt-3 text-gray-800">${material.name}</h3>
-                                <p class="text-sm mt-2 text-gray-500"><i class="fas fa-map-marker-alt mr-2 text-gray-400"></i>${material.location}</p>
-                                <div class="mt-4 flex justify-between items-center">
-                                    <div><p class="text-sm font-semibold text-gray-800">${material.quantity} ${material.unit}</p><p class="text-xs text-gray-500">disponibles</p></div>
-                                    <div class="text-right"><p class="text-lg font-bold text-[var(--color-accent)]">${new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(material.price || 0)}</p><p class="text-xs text-gray-500">par ${material.unit}</p></div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="p-4 bg-gray-50 border-t border-[var(--border-color)]">
-                            <p class="text-sm font-semibold text-[var(--color-accent)] flex items-center justify-center">
-                                <i class="fas fa-leaf mr-2"></i>Économie de CO2 estimée : ${co2Saved} kg
-                            </p>
-                        </div>`;
-                    grid.appendChild(card);
-                });
-            }
+// Étape 3 : Pages Login et Register
+// src/pages/Auth/Login.jsx
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { signInWithEmailAndPassword } from "../../services/firebase";
+import { auth } from "../../services/firebase";
 
-            const materialsCol = collection(db, 'artifacts', appId, 'public', 'data', 'materials');
-            onSnapshot(materialsCol, snapshot => {
-                allMaterials = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-                displayMaterials();
-                // Ici, vous pourriez aussi mettre à jour le graphique si nécessaire
-            }, error => console.error("Erreur de lecture des matériaux: ", error));
+function Login() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const navigate = useNavigate();
 
-            searchInput.addEventListener('input', displayMaterials);
-            categoryFilter.addEventListener('change', displayMaterials);
-            countryFilter.addEventListener('change', displayMaterials);
-        });
-    </script>
-</body>
-</html>
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      navigate("/admin");
+    } catch (err) {
+      alert("Erreur de connexion : " + err.message);
+    }
+  };
+
+  return (
+    <form onSubmit={handleLogin} className="p-8 max-w-md mx-auto">
+      <h2 className="text-2xl font-bold mb-4">Connexion</h2>
+      <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full p-2 border mb-2" />
+      <input type="password" placeholder="Mot de passe" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full p-2 border mb-4" />
+      <button type="submit" className="bg-green-700 text-white px-4 py-2">Se connecter</button>
+    </form>
+  );
+}
+export default Login;
+
+// src/pages/Auth/Register.jsx
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { createUserWithEmailAndPassword } from "../../services/firebase";
+import { auth } from "../../services/firebase";
+
+function Register() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const navigate = useNavigate();
+
+  const handleRegister = async (e) => {
+    e.preventDefault();
+    try {
+      await createUserWithEmailAndPassword(auth, email, password);
+      navigate("/admin");
+    } catch (err) {
+      alert("Erreur d'inscription : " + err.message);
+    }
+  };
+
+  return (
+    <form onSubmit={handleRegister} className="p-8 max-w-md mx-auto">
+      <h2 className="text-2xl font-bold mb-4">Inscription</h2>
+      <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full p-2 border mb-2" />
+      <input type="password" placeholder="Mot de passe" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full p-2 border mb-4" />
+      <button type="submit" className="bg-blue-900 text-white px-4 py-2">S'inscrire</button>
+    </form>
+  );
+}
+export default Register;
+
+// Étape 4 : Ajout du AuthProvider dans main.jsx
+// Remplacer dans src/main.jsx
+// import App from "./App"; =>
+import { AuthProvider } from "./hooks/useAuth";
+
+ReactDOM.createRoot(document.getElementById("root")).render(
+  <React.StrictMode>
+    <BrowserRouter>
+      <AuthProvider>
+        <App />
+      </AuthProvider>
+    </BrowserRouter>
+  </React.StrictMode>
+);
+
+// Étape 5 : Protection des pages sensibles (exemple Admin)
+// src/pages/Admin.jsx (mise à jour)
+import { useAuth } from "../hooks/useAuth";
+import { useNavigate } from "react-router-dom";
+import { useEffect } from "react";
+
+function Admin() {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!user) navigate("/login");
+  }, [user]);
+
+  return (
+    <div className="p-8">
+      <h2 className="text-2xl font-semibold text-green-800">Dashboard Admin</h2>
+      <p className="text-gray-700">Gestion des collectes, utilisateurs, et activités circulaires.</p>
+    </div>
+  );
+}
+export default Admin;
