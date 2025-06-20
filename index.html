@@ -27,14 +27,22 @@
             --color-card-bg: #FFFFFF;
             --color-text: #333333;
             --color-text-secondary: #888888;
-            --color-primary: #8EDC3F;
-            --color-primary-darker: #7cc930;
-            --color-accent: #2A833D;
+            /* NOUVELLE PALETTE */
+            --color-primary: #14B8A6; /* Bleu turquoise (Teal 500) */
+            --color-primary-darker: #0F766E; /* Teal 700 */
+            --color-accent: #2A833D; /* Vert foncé original */
             --color-border: #eef2f5;
             --color-danger: #e74c3c;
             --font-main: 'Poppins', sans-serif;
         }
         body { font-family: var(--font-main); background-color: var(--color-bg-alt); color: var(--color-text); }
+        .btn-primary {
+            background-color: var(--color-primary);
+            color: white;
+        }
+        .btn-primary:hover {
+            background-color: var(--color-primary-darker);
+        }
         .tag { background-color: rgba(42, 131, 61, 0.1); color: var(--color-accent) !important; font-weight: 600; }
         .tag-own { background-color: var(--color-accent); color: white !important; }
         .fade-in { animation: fadeIn 0.5s ease-in-out; }
@@ -43,15 +51,14 @@
         .modal-content { animation: slideInUp 0.4s ease-in-out; }
         @keyframes slideInUp { from { opacity: 0; transform: translateY(50px); } to { opacity: 1; transform: translateY(0); } }
         .form-input, .form-select { background-color: #f8f9fa !important; color: #333333 !important; border: 1px solid var(--color-border); }
-        .form-select option { background-color: white; color: black; }
-        .btn-primary-text { color: var(--color-accent) !important; }
-        .btn-danger { background-color: var(--color-danger); color: white; }
-        .spinner {
-            animation: spin 1s linear infinite;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        .spinner { animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .error-message-box {
+            background-color: #fffbe6;
+            border: 1px solid #fde68a;
+            color: #92400e;
+            padding: 1rem;
+            border-radius: 0.5rem;
         }
     </style>
 </head>
@@ -59,18 +66,18 @@
 
     <!-- Header -->
     <header class="bg-white shadow-sm sticky top-0 z-40">
-        <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+        <div class="container mx-auto px-4 md:px-6 py-4 flex justify-between items-center">
             <div>
-                <h1 class="text-2xl font-bold text-gray-800">Le Comptoir Circulaire</h1>
-                <p class="text-sm text-gray-500">Par GreenEcoGenius</p>
+                <h1 class="text-xl md:text-2xl font-bold text-gray-800">Le Comptoir Circulaire</h1>
+                <p class="text-xs md:text-sm text-gray-500">Par GreenEcoGenius</p>
             </div>
-            <div id="auth-container" class="flex items-center gap-4">
+            <div id="auth-container" class="flex items-center gap-2 md:gap-4">
                 <div id="logged-out-view">
-                    <button data-modal-target="login-modal" class="font-semibold text-gray-600 hover:text-gray-900 transition duration-300">Connexion</button>
-                    <button data-modal-target="register-modal" class="bg-[var(--color-primary)] text-white font-bold py-2 px-6 rounded-full hover:bg-[var(--color-primary-darker)] transition duration-300">Inscription</button>
+                    <button data-modal-target="login-modal" class="font-semibold text-gray-600 hover:text-[var(--color-primary)] transition duration-300 px-2 md:px-4">Connexion</button>
+                    <button data-modal-target="register-modal" class="btn-primary font-bold py-2 px-4 md:px-6 rounded-full transition duration-300 text-sm md:text-base">Inscription</button>
                 </div>
-                <div id="logged-in-view" class="hidden flex items-center gap-4">
-                    <button data-modal-target="sell-material-modal" class="bg-[var(--color-primary)] text-white font-bold py-2 px-6 rounded-full hover:bg-[var(--color-primary-darker)] transition duration-300"><i class="fas fa-plus-circle mr-2"></i>Vendre un lot</button>
+                <div id="logged-in-view" class="hidden items-center gap-2 md:gap-4">
+                    <button data-modal-target="sell-material-modal" class="btn-primary font-bold py-2 px-4 md:px-6 rounded-full transition duration-300 flex items-center text-sm md:text-base"><i class="fas fa-plus-circle mr-2"></i><span class="hidden md:inline">Vendre</span></button>
                     <div class="relative dropdown">
                         <button id="account-menu-btn" class="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center text-xl font-bold text-gray-600 uppercase"></button>
                         <div id="account-dropdown-menu" class="dropdown-menu absolute right-0 mt-2 w-48 bg-white rounded-md shadow-xl z-20 hidden">
@@ -84,32 +91,29 @@
     </header>
 
     <!-- Main Content -->
-    <main class="container mx-auto px-6 py-8">
-        <div class="bg-white p-6 rounded-lg shadow-sm border border-[var(--color-border)] mb-8">
-             <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                <div class="md:col-span-2 lg:col-span-2">
-                    <label for="search-input" class="block mb-2 text-sm font-medium text-gray-700">Rechercher un matériau</label>
-                    <div class="relative"><span class="absolute inset-y-0 left-0 flex items-center pl-3"><i class="fas fa-search text-gray-400"></i></span><input type="text" id="search-input" class="w-full bg-gray-50 border border-gray-300 rounded-lg py-2 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]" placeholder="Ex: Plastique HDPE, Cuivre..."></div>
-                </div>
-                <div>
-                    <label for="category-filter" class="block mb-2 text-sm font-medium text-gray-700">Catégorie</label>
-                    <select id="category-filter" class="w-full bg-gray-50 border border-gray-300 rounded-lg py-2 px-3 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"><option value="all">Toutes</option><option value="Plastiques">Plastiques</option><option value="Métaux">Métaux</option><option value="Papiers/Cartons">Papiers/Cartons</option><option value="Verre">Verre</option><option value="Bois">Bois</option></select>
-                </div>
-                <div>
-                    <label for="country-filter" class="block mb-2 text-sm font-medium text-gray-700">Pays</label>
-                    <select id="country-filter" class="w-full bg-gray-50 border border-gray-300 rounded-lg py-2 px-3 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"><option value="all">Tous</option><option value="France">France</option><option value="Allemagne">Allemagne</option><option value="Italie">Italie</option><option value="Espagne">Espagne</option></select>
-                </div>
+    <main class="container mx-auto px-4 md:px-6 py-8">
+        <!-- Filters -->
+        <div class="bg-white p-4 md:p-6 rounded-lg shadow-sm border border-[var(--color-border)] mb-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+                <div class="md:col-span-2"><label for="search-input" class="block mb-2 text-sm font-medium text-gray-700">Rechercher</label><div class="relative"><span class="absolute inset-y-0 left-0 flex items-center pl-3"><i class="fas fa-search text-gray-400"></i></span><input type="text" id="search-input" class="w-full form-input rounded-lg py-2 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]" placeholder="Ex: Plastique HDPE..."></div></div>
+                <div><label for="category-filter" class="block mb-2 text-sm font-medium text-gray-700">Catégorie</label><select id="category-filter" class="w-full form-select rounded-lg py-2 px-3 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"><option value="all">Toutes</option><option value="Plastiques">Plastiques</option><option value="Métaux">Métaux</option><option value="Papiers/Cartons">Papiers/Cartons</option><option value="Verre">Verre</option><option value="Bois">Bois</option></select></div>
+                <div><label for="country-filter" class="block mb-2 text-sm font-medium text-gray-700">Pays</label><select id="country-filter" class="w-full form-select rounded-lg py-2 px-3 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"><option value="all">Tous</option><option value="France">France</option><option value="Allemagne">Allemagne</option><option value="Italie">Italie</option><option value="Espagne">Espagne</option></select></div>
             </div>
         </div>
+
         <div class="flex flex-col lg:flex-row gap-8">
+            <!-- Materials Grid -->
             <div class="w-full lg:w-2/3">
-                <h2 class="text-2xl font-semibold mb-4 text-gray-800">Stock disponible en temps réel</h2>
+                <h2 class="text-2xl font-semibold mb-4 text-gray-800">Stock disponible</h2>
                 <div id="materials-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6 min-h-[300px]">
-                    <p id="loading-indicator" class="col-span-full text-center text-gray-500">Chargement des lots...</p>
+                    <div id="loading-container" class="col-span-full text-center text-gray-500 p-8">
+                        <p id="loading-indicator">Chargement des lots...</p>
+                    </div>
                 </div>
             </div>
+            <!-- Market Chart -->
             <aside class="w-full lg:w-1/3">
-                <div class="bg-white p-6 rounded-lg shadow-sm border border-[var(--color-border)] sticky top-24">
+                <div class="bg-white p-4 md:p-6 rounded-lg shadow-sm border border-[var(--color-border)] sticky top-24">
                     <h3 class="text-xl font-semibold mb-4 text-gray-800">Répartition du Marché</h3>
                     <div class="h-64 flex items-center justify-center">
                         <canvas id="market-chart"></canvas>
@@ -118,30 +122,30 @@
             </aside>
         </div>
     </main>
-
+    
     <!-- Modals -->
     <div id="modal-container">
         <!-- Sell Material Modal -->
         <div id="sell-material-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center p-4 modal-backdrop">
-             <div class="bg-white rounded-lg shadow-2xl p-8 w-full max-w-2xl modal-content"><div class="flex justify-between items-center mb-6"><h2 class="text-2xl font-bold text-gray-800">Vendre un nouveau lot</h2><button class="close-modal-btn text-gray-400 hover:text-gray-800 text-2xl">&times;</button></div><form id="add-material-form" class="space-y-4"><div class="grid grid-cols-1 md:grid-cols-2 gap-4"><div><label for="material-name" class="block mb-2 text-sm text-gray-700">Nom du matériau</label><input type="text" id="material-name" placeholder="Ex: PET Recyclé" required class="form-input w-full rounded-lg p-2"></div><div><label for="material-category" class="block mb-2 text-sm text-gray-700">Catégorie</label><select id="material-category" required class="form-select w-full rounded-lg p-2"><option value="Plastiques">Plastiques</option><option value="Métaux">Métaux</option><option value="Papiers/Cartons">Papiers/Cartons</option><option value="Verre">Verre</option><option value="Bois">Bois</option></select></div><div><label for="material-quantity" class="block mb-2 text-sm text-gray-700">Quantité</label><input type="number" step="0.01" id="material-quantity" placeholder="10.5" required class="form-input w-full rounded-lg p-2"></div><div><label for="material-unit" class="block mb-2 text-sm text-gray-700">Unité</label><select id="material-unit" required class="form-select w-full rounded-lg p-2"><option value="tonnes">tonnes</option><option value="kg">kg</option><option value="m³">m³</option></select></div><div><label for="material-price" class="block mb-2 text-sm text-gray-700">Prix par unité (€)</label><input type="number" step="0.01" id="material-price" placeholder="550.00" required class="form-input w-full rounded-lg p-2"></div><div><label for="material-location" class="block mb-2 text-sm text-gray-700">Localisation</label><input type="text" id="material-location" placeholder="Lyon, France" required class="form-input w-full rounded-lg p-2"></div></div><div class="mt-8 flex justify-end"><button id="submit-material-btn" type="submit" class="bg-[var(--color-primary)] text-white font-bold py-3 px-8 rounded-full hover:bg-[var(--color-primary-darker)] transition duration-300 w-48 text-center flex items-center justify-center"><span class="btn-text">Mettre en vente</span><span class="btn-spinner hidden ml-2"><i class="fas fa-spinner spinner"></i></span></button></div><p id="sell-form-error" class="text-red-500 mt-4 text-right"></p></form></div>
+             <div class="bg-white rounded-lg shadow-2xl p-8 w-full max-w-2xl modal-content"><div class="flex justify-between items-center mb-6"><h2 class="text-2xl font-bold text-gray-800">Vendre un nouveau lot</h2><button class="close-modal-btn text-gray-400 hover:text-gray-800 text-2xl">&times;</button></div><form id="add-material-form" class="space-y-4"><div class="grid grid-cols-1 md:grid-cols-2 gap-4"><div><label for="material-name" class="block mb-2 text-sm text-gray-700">Nom du matériau</label><input type="text" id="material-name" placeholder="Ex: PET Recyclé" required class="form-input w-full rounded-lg p-2"></div><div><label for="material-category" class="block mb-2 text-sm text-gray-700">Catégorie</label><select id="material-category" required class="form-select w-full rounded-lg p-2"><option value="Plastiques">Plastiques</option><option value="Métaux">Métaux</option><option value="Papiers/Cartons">Papiers/Cartons</option><option value="Verre">Verre</option><option value="Bois">Bois</option></select></div><div><label for="material-quantity" class="block mb-2 text-sm text-gray-700">Quantité</label><input type="number" step="0.01" id="material-quantity" placeholder="10.5" required class="form-input w-full rounded-lg p-2"></div><div><label for="material-unit" class="block mb-2 text-sm text-gray-700">Unité</label><select id="material-unit" required class="form-select w-full rounded-lg p-2"><option value="tonnes">tonnes</option><option value="kg">kg</option><option value="m³">m³</option></select></div><div><label for="material-price" class="block mb-2 text-sm text-gray-700">Prix par unité (€)</label><input type="number" step="0.01" id="material-price" placeholder="550.00" required class="form-input w-full rounded-lg p-2"></div><div><label for="material-location" class="block mb-2 text-sm text-gray-700">Localisation</label><input type="text" id="material-location" placeholder="Lyon, France" required class="form-input w-full rounded-lg p-2"></div></div><div class="mt-8 flex justify-end"><button id="submit-material-btn" type="submit" class="btn-primary font-bold py-3 px-8 rounded-full transition duration-300 w-48 text-center flex items-center justify-center"><span class="btn-text">Mettre en vente</span><span class="btn-spinner hidden ml-2"><i class="fas fa-spinner spinner"></i></span></button></div><p id="sell-form-error" class="text-red-500 mt-4 text-right"></p></form></div>
         </div>
         <!-- Login Modal -->
         <div id="login-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center p-4 modal-backdrop">
-            <div class="bg-white rounded-lg shadow-2xl p-8 w-full max-w-md modal-content"><div class="flex justify-between items-center mb-6"><h2 class="text-2xl font-bold text-gray-800">Connexion</h2><button class="close-modal-btn text-gray-400 hover:text-gray-800 text-2xl">&times;</button></div><form id="login-form"><div class="space-y-4"><div><label for="login-email" class="block mb-2 text-sm text-gray-700">Email</label><input type="email" id="login-email" required class="form-input w-full rounded-lg p-2"></div><div><label for="login-password" class="block mb-2 text-sm text-gray-700">Mot de passe</label><input type="password" id="login-password" required class="form-input w-full rounded-lg p-2"></div></div><div class="mt-8 flex justify-end"><button type="submit" class="bg-[var(--color-primary)] text-white font-bold py-3 px-8 rounded-full w-full">Se connecter</button></div><p id="login-error" class="text-red-500 mt-4 text-center"></p></form></div>
+            <div class="bg-white rounded-lg shadow-2xl p-8 w-full max-w-md modal-content"><div class="flex justify-between items-center mb-6"><h2 class="text-2xl font-bold text-gray-800">Connexion</h2><button class="close-modal-btn text-gray-400 hover:text-gray-800 text-2xl">&times;</button></div><form id="login-form"><div class="space-y-4"><div><label for="login-email" class="block mb-2 text-sm text-gray-700">Email</label><input type="email" id="login-email" required class="form-input w-full rounded-lg p-2"></div><div><label for="login-password" class="block mb-2 text-sm text-gray-700">Mot de passe</label><input type="password" id="login-password" required class="form-input w-full rounded-lg p-2"></div></div><div class="mt-8 flex justify-end"><button type="submit" class="btn-primary font-bold py-3 px-8 rounded-full w-full">Se connecter</button></div><p id="login-error" class="text-red-500 mt-4 text-center"></p></form></div>
         </div>
         <!-- Register Modal -->
         <div id="register-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center p-4 modal-backdrop">
-             <div class="bg-white rounded-lg shadow-2xl p-8 w-full max-w-md modal-content"><div class="flex justify-between items-center mb-6"><h2 class="text-2xl font-bold text-gray-800">Créer un compte</h2><button class="close-modal-btn text-gray-400 hover:text-gray-800 text-2xl">&times;</button></div><form id="register-form"><div class="space-y-4"><div><label for="register-name" class="block mb-2 text-sm text-gray-700">Nom ou Entreprise</label><input type="text" id="register-name" required class="form-input w-full rounded-lg p-2"></div><div><label for="register-email" class="block mb-2 text-sm text-gray-700">Email</label><input type="email" id="register-email" required class="form-input w-full rounded-lg p-2"></div><div><label for="register-password" class="block mb-2 text-sm text-gray-700">Mot de passe (6 caractères min.)</label><input type="password" id="register-password" required class="form-input w-full rounded-lg p-2"></div></div><div class="mt-8 flex justify-end"><button type="submit" class="bg-[var(--color-primary)] text-white font-bold py-3 px-8 rounded-full w-full">S'inscrire</button></div><p id="register-error" class="text-red-500 mt-4 text-center"></p></form></div>
+             <div class="bg-white rounded-lg shadow-2xl p-8 w-full max-w-md modal-content"><div class="flex justify-between items-center mb-6"><h2 class="text-2xl font-bold text-gray-800">Créer un compte</h2><button class="close-modal-btn text-gray-400 hover:text-gray-800 text-2xl">&times;</button></div><form id="register-form"><div class="space-y-4"><div><label for="register-name" class="block mb-2 text-sm text-gray-700">Nom ou Entreprise</label><input type="text" id="register-name" required class="form-input w-full rounded-lg p-2"></div><div><label for="register-email" class="block mb-2 text-sm text-gray-700">Email</label><input type="email" id="register-email" required class="form-input w-full rounded-lg p-2"></div><div><label for="register-password" class="block mb-2 text-sm text-gray-700">Mot de passe (6 caractères min.)</label><input type="password" id="register-password" required class="form-input w-full rounded-lg p-2"></div></div><div class="mt-8 flex justify-end"><button type="submit" class="btn-primary font-bold py-3 px-8 rounded-full w-full">S'inscrire</button></div><p id="register-error" class="text-red-500 mt-4 text-center"></p></form></div>
         </div>
         <!-- Account Modal -->
         <div id="account-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center p-4 modal-backdrop"></div>
-        <!-- Generic Message Modal -->
+        <!-- Message Modal -->
         <div id="message-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center p-4 modal-backdrop">
             <div class="bg-white rounded-lg shadow-2xl p-8 w-full max-w-md modal-content text-center">
                 <h2 id="message-modal-title" class="text-2xl font-bold mb-4 text-gray-800"></h2>
                 <p id="message-modal-text" class="mb-6 text-gray-600"></p>
                 <div class="flex justify-center gap-4">
-                    <button class="close-modal-btn bg-[var(--color-primary)] text-white font-bold py-2 px-6 rounded-full">OK</button>
+                    <button class="close-modal-btn btn-primary font-bold py-2 px-6 rounded-full">OK</button>
                 </div>
             </div>
         </div>
@@ -149,15 +153,14 @@
 
     <!-- Scripts -->
     <script type="module">
-        // ===================================================================================
-        // FIREBASE & APP INITIALIZATION
-        // ===================================================================================
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getFirestore, collection, onSnapshot, addDoc, doc, getDoc, writeBatch, setDoc, query, where, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, onSnapshot, addDoc, doc, getDoc, setDoc, query, where, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-functions.js";
+        // import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-functions.js";
 
-        // IMPORTANT: Replace with your actual Firebase configuration
+        // ===================================================================================
+        // ==!> VÉRIFICATION CRITIQUE DE LA CONFIGURATION <!==
+        // ===================================================================================
         const firebaseConfig = {
           apiKey: "AIzaSyB0tQRqJaOgqIi7Sbk0v1JPJZbSabzMmBo",
           authDomain: "greenecogenius.firebaseapp.com",
@@ -167,15 +170,10 @@
           appId: "1:201115761499:web:87f9961ff40f8a5e04387e",
           measurementId: "G-LNSR09QLWD"
         };
-        
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        const auth = getAuth(app);
-        const functions = getFunctions(app, 'europe-west1'); // Example region, adjust as needed
         const appId = "greenecogenius";
 
         // ===================================================================================
-        // STATE MANAGEMENT
+        // APPLICATION STATE & UI ELEMENTS
         // ===================================================================================
         const state = {
             allMaterials: [],
@@ -184,308 +182,116 @@
             currentUserData: {},
             marketChart: null
         };
-
-        // ===================================================================================
-        // UI MODULE
-        // Description: Handles all direct DOM manipulations and UI updates.
-        // ===================================================================================
         const UI = {
-            elements: {
-                loggedOutView: document.getElementById('logged-out-view'),
-                loggedInView: document.getElementById('logged-in-view'),
-                accountMenuBtn: document.getElementById('account-menu-btn'),
-                grid: document.getElementById('materials-grid'),
-                loadingIndicator: document.getElementById('loading-indicator'),
-                searchInput: document.getElementById('search-input'),
-                categoryFilter: document.getElementById('category-filter'),
-                countryFilter: document.getElementById('country-filter'),
-                chartCanvas: document.getElementById('market-chart'),
-                modalContainer: document.getElementById('modal-container'),
-                messageModal: document.getElementById('message-modal'),
-                messageModalTitle: document.getElementById('message-modal-title'),
-                messageModalText: document.getElementById('message-modal-text'),
-            },
-
-            updateAuthView(user, userData) {
-                if (user) {
-                    const name = userData.name || userData.email || '';
-                    this.elements.accountMenuBtn.textContent = name ? name[0].toUpperCase() : '?';
-                    this.elements.loggedOutView.classList.add('hidden');
-                    this.elements.loggedInView.classList.remove('hidden');
-                } else {
-                    this.elements.loggedOutView.classList.remove('hidden');
-                    this.elements.loggedInView.classList.add('hidden');
-                }
-            },
-            
-            renderMaterials(materials) {
-                this.elements.grid.innerHTML = '';
-                if (materials.length === 0) {
-                    this.elements.loadingIndicator.style.display = 'block';
-                    this.elements.loadingIndicator.textContent = 'Aucun matériau ne correspond à votre recherche.';
-                    return;
-                }
-                this.elements.loadingIndicator.style.display = 'none';
-
-                const co2Factors = { "Plastiques": 2100, "Métaux": 6500, "Papiers/Cartons": 800, "Verre": 400, "Bois": 50 };
-                materials.forEach(material => {
-                    const card = document.createElement('div');
-                    card.className = 'bg-white border border-[var(--border-color)] rounded-lg shadow-sm overflow-hidden flex flex-col justify-between transform hover:-translate-y-1 transition duration-300 fade-in';
-                    const isOwner = state.currentUser && material.sellerId === state.currentUser.uid;
-                    const supplierInfo = material.supplierName || 'N/A';
-                    const factor = co2Factors[material.category] || 0;
-                    const quantityInTons = material.unit === 'tonnes' ? (material.quantity || 0) : (material.quantity || 0) / 1000;
-                    const co2Saved = (factor * quantityInTons).toFixed(0);
-                    
-                    let actionButtonHTML;
-                    if (!state.currentUser) {
-                        actionButtonHTML = `<button class="bg-gray-200 text-gray-500 font-bold py-2 px-4 rounded-full w-full cursor-not-allowed" disabled>Connectez-vous pour acheter</button>`;
-                    } else if (isOwner) {
-                        actionButtonHTML = `<div class="tag-own text-center font-bold py-2 px-4 rounded-full w-full">Votre lot</div>`;
-                    } else {
-                        actionButtonHTML = `<button data-buy-id="${material.id}" class="bg-[var(--color-primary)] text-white font-bold py-2 px-4 rounded-full w-full hover:bg-[var(--color-primary-darker)] transition-colors">Acheter ce lot</button>`;
-                    }
-
-                    card.innerHTML = `
-                        <div>
-                            <img src="https://placehold.co/600x400/8EDC3F/FFFFFF?text=${encodeURIComponent(material.category)}" alt="${material.name}" class="w-full h-40 object-cover">
-                            <div class="p-5">
-                                <span class="tag text-xs font-semibold py-1 px-3 rounded-full">${material.category}</span>
-                                <h3 class="text-lg font-bold mt-3 text-gray-800">${material.name}</h3>
-                                <p class="text-sm mt-2 text-gray-600"><i class="fas fa-user mr-2 text-gray-400"></i>${supplierInfo}</p>
-                                <p class="text-sm mt-1 text-gray-600"><i class="fas fa-map-marker-alt mr-2 text-gray-400"></i>${material.location}</p>
-                                <div class="mt-4 flex justify-between items-center">
-                                    <div><p class="text-sm font-semibold text-gray-800">${material.quantity} ${material.unit}</p><p class="text-xs text-gray-500">disponibles</p></div>
-                                    <div class="text-right"><p class="text-lg font-bold text-[var(--color-accent)]">${new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(material.price || 0)}</p><p class="text-xs text-gray-500">par ${material.unit}</p></div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="p-4 bg-[var(--color-bg-alt)] border-t border-[var(--color-border)]">
-                            <p class="text-sm font-semibold text-[var(--color-accent)] flex items-center justify-center">
-                                <i class="fas fa-leaf mr-2"></i>Économie de CO2 estimée : ${co2Saved} kg
-                            </p>
-                        </div>
-                        <div class="p-4 bg-[var(--color-bg-alt)]">${actionButtonHTML}</div>`;
-                    this.elements.grid.appendChild(card);
-                });
-            },
-            
-            updateMarketChart(materials) {
-                const categoryCounts = materials.reduce((acc, material) => {
-                    acc[material.category] = (acc[material.category] || 0) + 1;
-                    return acc;
-                }, {});
-
-                const labels = Object.keys(categoryCounts);
-                const data = Object.values(categoryCounts);
-                const backgroundColors = ['#8EDC3F', '#2A833D', '#50D06A', '#84E197', '#C1F0F6'];
-
-                if (state.marketChart) {
-                    state.marketChart.data.labels = labels;
-                    state.marketChart.data.datasets[0].data = data;
-                    state.marketChart.data.datasets[0].backgroundColor = backgroundColors.slice(0, labels.length);
-                    state.marketChart.update();
-                } else {
-                    state.marketChart = new Chart(this.elements.chartCanvas, {
-                        type: 'doughnut',
-                        data: {
-                            labels: labels,
-                            datasets: [{
-                                label: 'Lots par catégorie',
-                                data: data,
-                                backgroundColor: backgroundColors,
-                                borderWidth: 2,
-                                borderColor: 'var(--color-bg-alt)',
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            plugins: {
-                                legend: { position: 'bottom', labels: { font: { family: 'Poppins' } } }
-                            },
-                            cutout: '60%'
-                        }
-                    });
-                }
-            },
-
-            toggleModal(modalId, show) {
-                const modal = document.getElementById(modalId);
-                if (modal) {
-                    modal.classList.toggle('hidden', !show);
-                }
-            },
-            
-            renderAccountModal(salesHTML, purchasesHTML) {
-                const accountModal = document.getElementById('account-modal');
-                accountModal.innerHTML = `
-                    <div class="bg-white rounded-lg shadow-2xl p-8 w-full max-w-3xl modal-content max-h-[80vh] overflow-y-auto">
-                        <div class="flex justify-between items-center mb-6">
-                            <h2 class="text-2xl font-bold text-gray-800">Mon Compte</h2>
-                            <button class="close-modal-btn text-gray-400 hover:text-gray-800 text-2xl">&times;</button>
-                        </div>
-                        <div class="space-y-6">
-                            <div><h3 class="font-bold text-xl mb-2 border-b pb-2 text-gray-700">Mes Ventes</h3><div class="space-y-2">${salesHTML}</div></div>
-                            <div><h3 class="font-bold text-xl mb-2 border-b pb-2 text-gray-700">Mes Achats</h3><div class="space-y-2">${purchasesHTML}</div></div>
-                        </div>
-                    </div>`;
-                this.toggleModal('account-modal', true);
-            },
-
-            setFormError(formId, message) {
-                const errorElement = document.getElementById(`${formId}-error`);
-                if(errorElement) errorElement.textContent = message;
-            },
-
-            toggleButtonSpinner(buttonId, show) {
-                const button = document.getElementById(buttonId);
-                if (button) {
-                    button.querySelector('.btn-text').classList.toggle('hidden', show);
-                    button.querySelector('.btn-spinner').classList.toggle('hidden', !show);
-                    button.disabled = show;
-                }
-            },
-            
-            showMessage(title, text) {
-                this.elements.messageModalTitle.textContent = title;
-                this.elements.messageModalText.textContent = text;
-                this.toggleModal('message-modal', true);
-            }
+            grid: document.getElementById('materials-grid'),
+            loadingContainer: document.getElementById('loading-container'),
+            chartCanvas: document.getElementById('market-chart'),
+            searchInput: document.getElementById('search-input'),
+            categoryFilter: document.getElementById('category-filter'),
+            countryFilter: document.getElementById('country-filter'),
+            loggedOutView: document.getElementById('logged-out-view'),
+            loggedInView: document.getElementById('logged-in-view'),
+            accountMenuBtn: document.getElementById('account-menu-btn'),
         };
 
-        // ===================================================================================
-        // DATA MODULE
-        // Description: Handles all interactions with Firestore.
-        // ===================================================================================
-        const DataService = {
-            materialsCol: collection(db, 'artifacts', appId, 'public', 'data', 'materials'),
-            usersCol: collection(db, 'artifacts', appId, 'users'),
-            purchasesCol: collection(db, 'artifacts', appId, 'public', 'data', 'purchases'),
-
-            subscribeToMaterials(callback) {
-                return onSnapshot(this.materialsCol, snapshot => {
-                    const materials = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-                    callback(materials);
-                }, error => {
-                    console.error("Erreur de lecture des matériaux: ", error);
-                    UI.showMessage("Erreur Réseau", "Impossible de charger les données. Veuillez vérifier votre connexion.");
-                });
-            },
-
-            async getUserData(userId) {
-                const userRef = doc(this.usersCol, userId);
-                const userDoc = await getDoc(userRef);
-                return userDoc.exists() ? userDoc.data() : null;
-            },
-
-            async addMaterial(materialData) {
-                return addDoc(this.materialsCol, { ...materialData, createdAt: serverTimestamp() });
-            },
-
-            async getAccountDetails(userId) {
-                let salesHTML = `<div class="p-2 text-center text-gray-500">Vous n'avez aucun lot en vente.</div>`;
-                let purchasesHTML = `<div class="p-2 text-center text-gray-500">Vous n'avez réalisé aucun achat.</div>`;
-                
-                try {
-                    const salesQuery = query(this.materialsCol, where("sellerId", "==", userId));
-                    const salesSnapshot = await getDocs(salesQuery);
-                    if(!salesSnapshot.empty) {
-                        salesHTML = salesSnapshot.docs.map(d => `<div class="p-3 bg-gray-50 border rounded-lg flex justify-between items-center"><span>${d.data().name} - ${d.data().quantity} ${d.data().unit}</span><span class="font-bold text-[var(--color-accent)]">${new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(d.data().price)}</span></div>`).join('');
-                    }
-
-                    const purchasesQuery = query(this.purchasesCol, where("buyerId", "==", userId));
-                    const purchasesSnapshot = await getDocs(purchasesQuery);
-                    if(!purchasesSnapshot.empty) {
-                        purchasesHTML = purchasesSnapshot.docs.map(d => `<div class="p-3 bg-gray-50 border rounded-lg flex justify-between items-center"><span>${d.data().name} (vendu par ${d.data().supplierName || 'N/A'})</span><span class="font-bold text-[var(--color-accent)]">${new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(d.data().price)}</span></div>`).join('');
-                    }
-                } catch (error) {
-                     console.error("Erreur d'index Firestore détectée:", error);
-                     const indexErrorMessage = `<div class="p-4 bg-yellow-100 border border-yellow-300 text-yellow-800 rounded-lg"><p class="font-bold text-lg text-center">Action requise sur votre base de données</p><p class="mt-2">Pour afficher vos ventes et achats, un "index" est nécessaire. Il semble qu'il manque. C'est très simple à créer manuellement :</p><ol class="list-decimal list-inside mt-2 space-y-1"><li>Allez sur votre console Firebase > Firestore Database > onglet Index > Champ individuel.</li><li><b>Pour les Ventes:</b> Ajoutez une exception pour la collection <code>materials</code>, champ <code>sellerId</code> (Croissant & Décroissant).</li><li><b>Pour les Achats:</b> Ajoutez une exception pour la collection <code>purchases</code>, champ <code>buyerId</code> (Croissant & Décroissant).</li></ol><p class="mt-2 text-sm">Après la création (quelques minutes), rafraîchissez cette page et ré-ouvrez "Mon Compte".</p></div>`;
-                     salesHTML = indexErrorMessage;
-                     purchasesHTML = '';
-                }
-                
-                return { salesHTML, purchasesHTML };
-            }
-        };
+        function displayError(errorMessage, details = '') {
+            UI.grid.innerHTML = `<div class="col-span-full error-message-box">
+                <h3 class="font-bold text-lg">Oops ! Une erreur est survenue.</h3>
+                <p class="mt-2">${errorMessage}</p>
+                <p class="mt-2 text-sm font-mono bg-yellow-100 p-2 rounded">${details}</p>
+                <p class="mt-4"><b>Vérifications :</b></p>
+                <ol class="list-decimal list-inside text-sm">
+                    <li>La <b>firebaseConfig</b> dans le code est-elle 100% correcte ?</li>
+                    <li>Le domaine <b>${window.location.hostname}</b> est-il bien dans les "Domaines autorisés" de Firebase Auth ?</li>
+                    <li>Les <b>Règles Firestore</b> sont-elles bien publiées et correctes ?</li>
+                </ol>
+            </div>`;
+        }
 
         // ===================================================================================
-        // AUTH MODULE
-        // Description: Handles all Firebase Authentication logic.
+        // INITIALISATION
         // ===================================================================================
-        const AuthService = {
-            onAuthChange(callback) {
-                onAuthStateChanged(auth, callback);
-            },
+        try {
+            const app = initializeApp(firebaseConfig);
+            const db = getFirestore(app);
+            const auth = getAuth(app);
+            // const functions = getFunctions(app, 'europe-west1');
             
-            async register(name, email, password) {
-                const cred = await createUserWithEmailAndPassword(auth, email, password);
-                const userRef = doc(db, 'artifacts', appId, 'users', cred.user.uid);
-                await setDoc(userRef, { name, email, createdAt: serverTimestamp() });
-                return cred.user;
-            },
-            
-            async login(email, password) {
-                return signInWithEmailAndPassword(auth, email, password);
-            },
+            main(db, auth);
 
-            logout() {
-                return signOut(auth);
-            }
-        };
+        } catch (error) {
+            console.error("Erreur critique d'initialisation de Firebase: ", error);
+            displayError("La configuration de Firebase semble incorrecte.", `Message: ${error.message}.`);
+        }
         
         // ===================================================================================
-        // PAYMENT MODULE (STRIPE INTEGRATION)
-        // Description: Handles the checkout process with Stripe via Cloud Functions.
+        // CORE APPLICATION LOGIC
         // ===================================================================================
-        const PaymentService = {
-            stripe: null,
+        function main(db, auth) {
+            const materialsCol = collection(db, 'artifacts', appId, 'public', 'data', 'materials');
 
-            initializeStripe(publicKey) {
-                this.stripe = Stripe(publicKey);
-            },
+            // --- DATA LISTENER ---
+            onSnapshot(materialsCol, (snapshot) => {
+                state.allMaterials = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                filterAndDisplay();
+            }, (error) => {
+                console.error("Erreur Firestore (onSnapshot): ", error);
+                displayError("Impossible de lire la base de données.", `Message: ${error.message}.`);
+            });
+
+            // --- AUTH LISTENER ---
+            onAuthStateChanged(auth, async (user) => {
+                if (user) {
+                    state.currentUser = user;
+                    const userRef = doc(db, 'artifacts', appId, 'users', user.uid);
+                    const userDoc = await getDoc(userRef);
+                    state.currentUserData = userDoc.exists() ? userDoc.data() : {};
+                    
+                    const name = state.currentUserData.name || '';
+                    UI.accountMenuBtn.textContent = name ? name[0].toUpperCase() : '👤';
+                    UI.loggedOutView.classList.add('hidden');
+                    UI.loggedInView.classList.remove('hidden');
+                } else {
+                    state.currentUser = null;
+                    state.currentUserData = {};
+                    UI.loggedOutView.classList.remove('hidden');
+                    UI.loggedInView.classList.add('hidden');
+                }
+                filterAndDisplay(); // Re-render materials with correct auth state
+            });
             
-            /**
-             * This function calls a Firebase Cloud Function to create a Stripe Checkout Session.
-             * It passes the material ID to the backend, which securely retrieves the price
-             * and other details from Firestore. This prevents price manipulation on the client-side.
-             * * @param {string} materialId - The ID of the material to be purchased.
-             */
-            async checkout(materialId) {
-                if (!this.stripe) {
-                    console.error("Stripe.js not initialized.");
-                    UI.showMessage("Erreur de Paiement", "Le service de paiement n'est pas prêt. Veuillez réessayer.");
-                    return;
-                }
-                
-                try {
-                    // Call the Cloud Function to create the checkout session
-                    const createStripeCheckoutSession = httpsCallable(functions, 'createStripeCheckoutSession');
-                    const { data } = await createStripeCheckoutSession({ materialId: materialId });
-                    
-                    // The Cloud Function returns a session ID. Redirect the user to Stripe Checkout.
-                    const { sessionId } = data;
-                    const { error } = await this.stripe.redirectToCheckout({ sessionId });
-                    
-                    if (error) {
-                        console.error("Stripe redirect error:", error);
-                        UI.showMessage("Erreur de Paiement", error.message);
-                    }
-                } catch (error) {
-                    console.error("Cloud Function error:", error);
-                    UI.showMessage("Erreur de Paiement", "Impossible de démarrer le paiement. Veuillez réessayer plus tard.");
-                }
-            }
-        };
+            // --- EVENT LISTENERS ---
+            UI.searchInput.addEventListener('input', filterAndDisplay);
+            UI.categoryFilter.addEventListener('change', filterAndDisplay);
+            UI.countryFilter.addEventListener('change', filterAndDisplay);
+            
+            // Simplified global click handler
+            document.body.addEventListener('click', (e) => {
+                const target = e.target;
+                const dropdownMenu = document.getElementById('account-dropdown-menu');
 
-        // ===================================================================================
-        // APPLICATION LOGIC & EVENT LISTENERS
-        // ===================================================================================
+                if (target.closest('[data-modal-target]')) {
+                    toggleModal(target.closest('[data-modal-target]').dataset.modalTarget, true);
+                }
+                if (target.closest('.close-modal-btn')) {
+                    toggleModal(target.closest('.modal-backdrop').id, false);
+                }
+                if (target.closest('#account-menu-btn')) {
+                    dropdownMenu.classList.toggle('hidden');
+                } else if (!target.closest('.dropdown')) {
+                    dropdownMenu.classList.add('hidden');
+                }
+                if (target.closest('#logout-btn')) {
+                    signOut(auth);
+                    dropdownMenu.classList.add('hidden');
+                }
+            });
+        }
+        
         function filterAndDisplay() {
-            const search = UI.elements.searchInput.value.toLowerCase();
-            const category = UI.elements.categoryFilter.value;
-            const country = UI.elements.countryFilter.value;
+            const search = UI.searchInput.value.toLowerCase();
+            const category = UI.categoryFilter.value;
+            const country = UI.countryFilter.value;
 
             state.filteredMaterials = state.allMaterials.filter(material => {
                 const countryMatch = country === 'all' || (material.location || '').toLowerCase().includes(country.toLowerCase());
@@ -495,318 +301,99 @@
                 return countryMatch && categoryMatch && searchMatch;
             });
             
-            UI.renderMaterials(state.filteredMaterials);
-            UI.updateMarketChart(state.filteredMaterials);
+            renderMaterials(state.filteredMaterials);
+            updateMarketChart(state.filteredMaterials);
         }
 
-        function handleAppClick(e) {
-            const target = e.target;
-            const dropdownMenu = document.getElementById('account-dropdown-menu');
-            
-            // Dropdown menu toggle
-            if (target.closest('#account-menu-btn')) { 
-                dropdownMenu.classList.toggle('hidden'); 
-            } else if (!target.closest('.dropdown')) { 
-                dropdownMenu.classList.add('hidden'); 
+        function renderMaterials(materials) {
+            UI.grid.innerHTML = '';
+            if (materials.length === 0) {
+                 UI.grid.innerHTML = '<p class="col-span-full text-center text-gray-500">Aucun matériau ne correspond à votre recherche.</p>';
+                 return;
             }
 
-            // Modal openers
-            if(target.closest('[data-modal-target]')) {
-                UI.toggleModal(target.closest('[data-modal-target]').dataset.modalTarget, true);
-            }
-
-            // Modal closers
-            if(target.closest('.close-modal-btn')) {
-                const modal = target.closest('.modal-backdrop');
-                if (modal) UI.toggleModal(modal.id, false);
-            }
-
-            // Auth actions
-            if (target.closest('#logout-btn')) { 
-                AuthService.logout(); 
-                dropdownMenu.classList.add('hidden');
-                UI.showMessage("Déconnexion", "Vous avez été déconnecté avec succès.");
-            }
-            if (target.closest('#open-account-btn')) { 
-                openAccountModal(); 
-                dropdownMenu.classList.add('hidden'); 
-            }
-
-            // Buy action
-            const buyButton = target.closest('[data-buy-id]');
-            if(buyButton) {
-                const materialId = buyButton.dataset.buyId;
-                PaymentService.checkout(materialId);
-            }
-        }
-        
-        async function openAccountModal() {
-            if (!state.currentUser) return;
-            const { salesHTML, purchasesHTML } = await DataService.getAccountDetails(state.currentUser.uid);
-            UI.renderAccountModal(salesHTML, purchasesHTML);
-        }
-
-        // Initialize the app
-        document.addEventListener('DOMContentLoaded', () => {
-            // NOTE: Replace with your actual Stripe Publishable Key
-            // This key is safe to be exposed on the client-side.
-            PaymentService.initializeStripe('pk_test_YOUR_STRIPE_PUBLISHABLE_KEY');
-
-            // Set up event listeners
-            document.addEventListener('click', handleAppClick);
-            ['input', 'change'].forEach(evt => {
-                UI.elements.searchInput.addEventListener(evt, filterAndDisplay);
-                UI.elements.categoryFilter.addEventListener(evt, filterAndDisplay);
-                UI.elements.countryFilter.addEventListener(evt, filterAndDisplay);
-            });
-
-            // Auth state change subscription
-            AuthService.onAuthChange(async (user) => {
-                if (user) {
-                    state.currentUser = user;
-                    state.currentUserData = await DataService.getUserData(user.uid) || {};
-                } else {
-                    state.currentUser = null;
-                    state.currentUserData = {};
-                }
-                UI.updateAuthView(user, state.currentUserData);
-                filterAndDisplay(); // Re-render materials with correct auth state
-            });
-
-            // Material data subscription
-            DataService.subscribeToMaterials((materials) => {
-                state.allMaterials = materials;
-                filterAndDisplay();
-            });
-
-            // Form Submissions
-            document.getElementById('register-form').addEventListener('submit', async e => {
-                e.preventDefault();
-                const name = e.target['register-name'].value;
-                const email = e.target['register-email'].value;
-                const password = e.target['register-password'].value;
-                try {
-                    await AuthService.register(name, email, password);
-                    UI.toggleModal('register-modal', false);
-                    e.target.reset();
-                    UI.setFormError('register-form', '');
-                } catch (error) {
-                    console.error(error);
-                    UI.setFormError('register-form', 'Erreur lors de l\'inscription. L\'email est peut-être déjà utilisé.');
-                }
-            });
-
-            document.getElementById('login-form').addEventListener('submit', async e => {
-                e.preventDefault();
-                const email = e.target['login-email'].value;
-                const password = e.target['login-password'].value;
-                try {
-                    await AuthService.login(email, password);
-                    UI.toggleModal('login-modal', false);
-                    e.target.reset();
-                    UI.setFormError('login-form', '');
-                } catch (error) {
-                    UI.setFormError('login-form', 'Email ou mot de passe incorrect.');
-                }
-            });
-
-            document.getElementById('add-material-form').addEventListener('submit', async e => {
-                e.preventDefault();
-                if (!state.currentUser) return;
-
-                UI.toggleButtonSpinner('submit-material-btn', true);
-                UI.setFormError('sell-form-error', '');
-
-                const newMaterial = {
-                    name: e.target['material-name'].value,
-                    category: e.target['material-category'].value,
-                    quantity: parseFloat(e.target['material-quantity'].value),
-                    unit: e.target['material-unit'].value,
-                    price: parseFloat(e.target['material-price'].value),
-                    location: e.target['material-location'].value,
-                    sellerId: state.currentUser.uid,
-                    supplierName: state.currentUserData.name,
-                };
-
-                try {
-                    await DataService.addMaterial(newMaterial);
-                    UI.toggleModal('sell-material-modal', false);
-                    e.target.reset();
-                } catch(error) {
-                    console.error("Error adding material: ", error);
-                    UI.setFormError('sell-form-error', 'Une erreur est survenue. Veuillez réessayer.');
-                } finally {
-                    UI.toggleButtonSpinner('submit-material-btn', false);
-                }
-            });
-        });
-
-        // ===================================================================================
-        // CLOUD FUNCTIONS ARCHITECTURE (For deployment in Firebase)
-        // ===================================================================================
-        /*
-        
-        IMPORTANT: The following code is for documentation purposes. It must be deployed 
-        as Firebase Cloud Functions using the Firebase CLI. It will NOT run in the browser.
-
-        You need to create two files in your Firebase functions directory (e.g., `functions/index.js`).
-        
-        -----------------------------------------------------------------------------------
-        
-        FILE: `functions/index.js`
-        
-        const functions = require("firebase-functions");
-        const admin = require("firebase-admin");
-        // IMPORTANT: Initialize Stripe with your SECRET key.
-        // Use environment configuration for security:
-        // `firebase functions:config:set stripe.secret_key="sk_test_YOUR_SECRET_KEY"`
-        const stripe = require("stripe")(functions.config().stripe.secret_key);
-
-        admin.initializeApp();
-        const db = admin.firestore();
-
-        /**
-         * Cloud Function: createStripeCheckoutSession
-         * -------------------------------------------
-         * Triggered by an HTTPS call from the client-side app.
-         * Creates a Stripe Checkout session for a specific material.
-         *
-         * @param data - Contains `materialId`.
-         * @param context - Contains authentication info (`context.auth.uid`).
-         * @returns {sessionId} - The ID of the created Stripe session.
-         */
-        exports.createStripeCheckoutSession = functions
-            .region('europe-west1') // Match client-side region
-            .https.onCall(async (data, context) => {
-            
-                // 1. Authentication Check: Ensure the user is logged in.
-                if (!context.auth) {
-                    throw new functions.https.HttpsError(
-                        "unauthenticated", 
-                        "Vous devez être connecté pour effectuer un achat."
-                    );
-                }
-
-                const { materialId } = data;
-                const userId = context.auth.uid;
+            const co2Factors = { "Plastiques": 2100, "Métaux": 6500, "Papiers/Cartons": 800, "Verre": 400, "Bois": 50 };
+            materials.forEach(material => {
+                const card = document.createElement('div');
+                card.className = 'bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden flex flex-col justify-between transform hover:-translate-y-1 transition duration-300 fade-in';
+                const isOwner = state.currentUser && material.sellerId === state.currentUser.uid;
+                const supplierInfo = material.supplierName || 'N/A';
+                const quantityInTons = material.unit === 'tonnes' ? (material.quantity || 0) : (material.quantity || 0) / 1000;
+                const co2Saved = ( (co2Factors[material.category] || 0) * quantityInTons).toFixed(0);
                 
-                try {
-                    // 2. Secure Data Retrieval: Get material details from Firestore.
-                    const materialRef = db.collection('artifacts/greenecogenius/public/data/materials').doc(materialId);
-                    const materialDoc = await materialRef.get();
+                let actionButtonHTML;
+                if (!state.currentUser) {
+                    actionButtonHTML = `<button class="bg-gray-200 text-gray-500 font-bold py-2 px-4 rounded-full w-full cursor-not-allowed text-sm" disabled>Connectez-vous pour acheter</button>`;
+                } else if (isOwner) {
+                    actionButtonHTML = `<div class="tag-own text-center font-bold py-2 px-4 rounded-full w-full text-sm">Votre lot</div>`;
+                } else {
+                    actionButtonHTML = `<button data-buy-id="${material.id}" class="btn-primary font-bold py-2 px-4 rounded-full w-full transition-colors text-sm">Acheter ce lot</button>`;
+                }
 
-                    if (!materialDoc.exists) {
-                        throw new functions.https.HttpsError("not-found", "Ce lot n'existe plus.");
-                    }
-                    
-                    const material = materialDoc.data();
-                    
-                    // 3. Ownership Check: Prevent user from buying their own item.
-                    if (material.sellerId === userId) {
-                         throw new functions.https.HttpsError("permission-denied", "Vous ne pouvez pas acheter votre propre lot.");
-                    }
+                card.innerHTML = `
+                    <div>
+                        <img src="https://placehold.co/600x400/14B8A6/FFFFFF?text=${encodeURIComponent(material.category)}" alt="${material.name}" class="w-full h-40 object-cover">
+                        <div class="p-4">
+                            <span class="tag text-xs font-semibold py-1 px-3 rounded-full">${material.category}</span>
+                            <h3 class="text-lg font-bold mt-3 text-gray-800">${material.name}</h3>
+                            <p class="text-sm mt-2 text-gray-600"><i class="fas fa-user mr-2 text-gray-400"></i>${supplierInfo}</p>
+                            <p class="text-sm mt-1 text-gray-600"><i class="fas fa-map-marker-alt mr-2 text-gray-400"></i>${material.location}</p>
+                            <div class="mt-4 flex justify-between items-center">
+                                <div><p class="text-sm font-semibold text-gray-800">${material.quantity} ${material.unit}</p><p class="text-xs text-gray-500">disponibles</p></div>
+                                <div class="text-right"><p class="text-lg font-bold text-[var(--color-accent)]">${new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(material.price || 0)}</p><p class="text-xs text-gray-500">par ${material.unit}</p></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="p-4 bg-gray-50 border-t"><p class="text-sm font-semibold text-[var(--color-accent)] flex items-center justify-center"><i class="fas fa-leaf mr-2"></i>Économie estimée: ${co2Saved} kg CO₂</p></div>
+                    <div class="p-4 bg-gray-50">${actionButtonHTML}</div>`;
+                UI.grid.appendChild(card);
+            });
+        }
 
-                    // 4. Create Stripe Checkout Session
-                    const session = await stripe.checkout.sessions.create({
-                        payment_method_types: ["card"],
-                        mode: "payment",
-                        line_items: [{
-                            price_data: {
-                                currency: "eur",
-                                product_data: {
-                                    name: material.name,
-                                    images: [`https://placehold.co/128x128/2A833D/FFFFFF?text=Lot`],
-                                },
-                                unit_amount: Math.round(material.price * 100), // Price in cents
-                            },
-                            quantity: 1, // Buying the whole lot
-                        }],
-                        // Add metadata to link the session back to our app's data
-                        metadata: {
-                            materialId: materialId,
-                            buyerId: userId,
+        function updateMarketChart(materials) {
+            const categoryCounts = materials.reduce((acc, material) => {
+                acc[material.category] = (acc[material.category] || 0) + 1;
+                return acc;
+            }, {});
+
+            const labels = Object.keys(categoryCounts);
+            const data = Object.values(categoryCounts);
+            const backgroundColors = ['#14B8A6', '#2A833D', '#0d9488', '#84E197', '#C1F0F6'];
+
+            if (state.marketChart) {
+                state.marketChart.data.labels = labels;
+                state.marketChart.data.datasets[0].data = data;
+                state.marketChart.data.datasets[0].backgroundColor = backgroundColors.slice(0, labels.length);
+                state.marketChart.update();
+            } else {
+                state.marketChart = new Chart(UI.chartCanvas, {
+                    type: 'doughnut',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Lots par catégorie',
+                            data: data,
+                            backgroundColor: backgroundColors,
+                            borderWidth: 2,
+                            borderColor: 'var(--color-bg-alt)',
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { position: 'bottom', labels: { font: { family: 'Poppins' }, boxWidth: 12 } }
                         },
-                        // Define URLs for success and cancellation
-                        success_url: `https://YOUR_APP_URL?payment_success=true`, // Replace with your domain
-                        cancel_url: `https://YOUR_APP_URL?payment_cancelled=true`,  // Replace with your domain
-                    });
-
-                    // 5. Return the session ID to the client
-                    return { sessionId: session.id };
-                } catch (error) {
-                    console.error("Stripe session creation failed:", error);
-                    throw new functions.https.HttpsError("internal", "Impossible de créer la session de paiement.");
-                }
-        });
-
-
-        /**
-         * Cloud Function: stripeWebhook
-         * -------------------------------
-         * Listens for events from Stripe, specifically 'checkout.session.completed'.
-         * This is the secure way to fulfill an order after a successful payment.
-         *
-         * To deploy, get your webhook's secret from the Stripe dashboard and set it:
-         * `firebase functions:config:set stripe.webhook_secret="whsec_..."`
-         */
-        exports.stripeWebhook = functions
-            .region('europe-west1')
-            .https.onRequest(async (req, res) => {
-            const sig = req.headers["stripe-signature"];
-            const webhookSecret = functions.config().stripe.webhook_secret;
-
-            let event;
-            try {
-                // Verify the event came from Stripe
-                event = stripe.webhooks.constructEvent(req.rawBody, sig, webhookSecret);
-            } catch (err) {
-                console.error(`Webhook signature verification failed.`, err.message);
-                return res.status(400).send(`Webhook Error: ${err.message}`);
+                        cutout: '60%'
+                    }
+                });
             }
+        }
 
-            // Handle the checkout.session.completed event
-            if (event.type === 'checkout.session.completed') {
-                const session = event.data.object;
-                const { materialId, buyerId } = session.metadata;
-
-                try {
-                    // Fulfill the purchase using a transaction
-                    await db.runTransaction(async (transaction) => {
-                        const materialRef = db.doc(`artifacts/greenecogenius/public/data/materials/${materialId}`);
-                        const materialDoc = await transaction.get(materialRef);
-
-                        if (!materialDoc.exists) {
-                            console.log(`Material ${materialId} already processed.`);
-                            return; // Idempotent: already handled
-                        }
-                        
-                        const materialData = materialDoc.data();
-                        
-                        // Create purchase record
-                        const purchaseRef = db.collection('artifacts/greenecogenius/public/data/purchases').doc();
-                        transaction.set(purchaseRef, {
-                            ...materialData,
-                            buyerId: buyerId,
-                            purchaseDate: admin.firestore.FieldValue.serverTimestamp(),
-                            stripePaymentIntentId: session.payment_intent,
-                        });
-                        
-                        // Delete material listing
-                        transaction.delete(materialRef);
-                    });
-                     console.log(`Successfully fulfilled purchase for material ${materialId} by buyer ${buyerId}.`);
-                } catch (error) {
-                    console.error('Error fulfilling purchase:', error);
-                    return res.status(500).send('Internal server error.');
-                }
-            }
-
-            // Acknowledge receipt of the event
-            res.status(200).send();
-        });
-        
-        */
+        function toggleModal(modalId, show) {
+            const modal = document.getElementById(modalId);
+            if (modal) modal.classList.toggle('hidden', !show);
+        }
     </script>
 </body>
 </html>
-
